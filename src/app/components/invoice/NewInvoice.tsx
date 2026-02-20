@@ -1,0 +1,422 @@
+import { useState } from 'react';
+import { Plus, Trash2, Search, X } from 'lucide-react';
+
+interface InvoiceItem {
+  id: string;
+  itemName: string;
+  itemCode: string;
+  qty: number;
+  price: number;
+  discount: number;
+  total: number;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+}
+
+interface NewInvoiceProps {
+  onSave: (invoice: any) => void;
+}
+
+export function NewInvoice({ onSave }: NewInvoiceProps) {
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Credit' | 'Cheque' | 'Bank Transfer'>('Cash');
+  const [salesRef, setSalesRef] = useState('');
+  const [items, setItems] = useState<InvoiceItem[]>([]);
+  const [showItemSearch, setShowItemSearch] = useState(false);
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+
+  // Mock customers
+  const mockCustomers: Customer[] = [
+    { id: 'CUST-001', name: 'John Auto Parts', phone: '+94771234567', address: '123 Main St, Colombo 03' },
+    { id: 'CUST-002', name: 'Lanka Motors', phone: '+94779876543', address: '456 Galle Rd, Mount Lavinia' },
+    { id: 'CUST-003', name: 'Royal Bike Shop', phone: '+94112223344', address: '789 Kandy Rd, Kadawatha' },
+    { id: 'CUST-004', name: 'Speed Auto Center', phone: '+94777778888', address: '321 Negombo Rd, Wattala' },
+  ];
+
+  // Mock items for search
+  const mockItems = [
+    { id: '1', name: 'Engine Oil 10W-40', code: 'EO-001', price: 1500, stock: 50 },
+    { id: '2', name: 'Brake Pad Set', code: 'BP-102', price: 2500, stock: 30 },
+    { id: '3', name: 'Chain Sprocket Kit', code: 'CS-203', price: 3500, stock: 20 },
+    { id: '4', name: 'Air Filter', code: 'AF-304', price: 800, stock: 45 },
+    { id: '5', name: 'Spark Plug', code: 'SP-405', price: 450, stock: 100 },
+  ];
+
+  const selectCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setCustomerAddress(customer.address);
+    setShowCustomerSearch(false);
+    setCustomerSearchQuery('');
+  };
+
+  const addItem = (item: typeof mockItems[0]) => {
+    const newItem: InvoiceItem = {
+      id: Date.now().toString(),
+      itemName: item.name,
+      itemCode: item.code,
+      qty: 1,
+      price: item.price,
+      discount: 0,
+      total: item.price,
+    };
+    setItems([...items, newItem]);
+    setShowItemSearch(false);
+    setSearchQuery('');
+  };
+
+  const updateItem = (id: string, field: keyof InvoiceItem, value: number) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: value };
+        updated.total = (updated.qty * updated.price) - updated.discount;
+        return updated;
+      }
+      return item;
+    }));
+  };
+
+  const removeItem = (id: string) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const calculateSubTotal = () => items.reduce((sum, item) => sum + (item.qty * item.price), 0);
+  const calculateTotalDiscount = () => items.reduce((sum, item) => sum + item.discount, 0);
+  const calculateNetTotal = () => calculateSubTotal() - calculateTotalDiscount();
+
+  const handleSave = () => {
+    const invoice = {
+      id: 'INV-' + Date.now(),
+      date: invoiceDate,
+      customer: {
+        name: selectedCustomer?.name || '',
+        phone: selectedCustomer?.phone || '',
+        address: customerAddress,
+      },
+      paymentMethod,
+      salesRef,
+      items,
+      subTotal: calculateSubTotal(),
+      discount: calculateTotalDiscount(),
+      netTotal: calculateNetTotal(),
+      settled: paymentMethod === 'Cash',
+    };
+    onSave(invoice);
+    // Reset form
+    setSelectedCustomer(null);
+    setCustomerAddress('');
+    setItems([]);
+  };
+
+  const filteredItems = mockItems.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.code.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredCustomers = mockCustomers.filter(customer =>
+    customer.name.toLowerCase().includes(customerSearchQuery.toLowerCase()) ||
+    customer.phone.includes(customerSearchQuery)
+  );
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">New Invoice</h2>
+        <p className="text-xs text-gray-600 mt-1">Create a new sales invoice</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        {/* Invoice Header */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Invoice Date</label>
+            <input
+              type="date"
+              value={invoiceDate}
+              onChange={(e) => setInvoiceDate(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Customer *</label>
+            <div className="flex gap-2">
+              {selectedCustomer ? (
+                <div className="flex-1 px-3 py-1.5 text-sm border border-green-300 bg-green-50 rounded flex justify-between items-center">
+                  <div>
+                    <p className="font-medium text-gray-900">{selectedCustomer.name}</p>
+                    <p className="text-xs text-gray-600">{selectedCustomer.phone}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCustomer(null);
+                      setCustomerAddress('');
+                    }}
+                    className="text-gray-400 hover:text-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCustomerSearch(true)}
+                  className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-left text-gray-500 flex items-center gap-2"
+                >
+                  <Search className="w-4 h-4" />
+                  Search customer...
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Customer Address */}
+        {selectedCustomer && (
+          <div className="mb-6">
+            <label className="block text-xs font-medium text-gray-700 mb-1">Customer Address</label>
+            <textarea
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={2}
+              placeholder="Enter customer address"
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Payment Method</label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as any)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Cash">Cash</option>
+              <option value="Credit">Credit</option>
+              <option value="Cheque">Cheque</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Sales Reference</label>
+            <input
+              type="text"
+              value={salesRef}
+              onChange={(e) => setSalesRef(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Sales person name"
+            />
+          </div>
+        </div>
+
+        {/* Items Section */}
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-3">
+            <label className="text-xs font-medium text-gray-700">Items</label>
+            <button
+              onClick={() => setShowItemSearch(true)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              Add Item
+            </button>
+          </div>
+
+          {items.length > 0 && (
+            <div className="border border-gray-200 rounded overflow-hidden">
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700">Item</th>
+                    <th className="px-3 py-2 text-left font-medium text-gray-700">Code</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Qty</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Price</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Discount</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Total</th>
+                    <th className="px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.id} className="border-t border-gray-200">
+                      <td className="px-3 py-2">{item.itemName}</td>
+                      <td className="px-3 py-2">{item.itemCode}</td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          value={item.qty}
+                          onChange={(e) => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)}
+                          className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs"
+                          min="1"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right">{item.price.toFixed(2)}</td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          value={item.discount}
+                          onChange={(e) => updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)}
+                          className="w-20 px-2 py-1 text-right border border-gray-300 rounded text-xs"
+                          min="0"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right font-medium">{item.total.toFixed(2)}</td>
+                      <td className="px-3 py-2">
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Totals */}
+        {items.length > 0 && (
+          <div className="flex justify-end">
+            <div className="w-64 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Sub Total:</span>
+                <span className="font-medium">Rs. {calculateSubTotal().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Total Discount:</span>
+                <span className="font-medium text-red-600">- Rs. {calculateTotalDiscount().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-gray-200">
+                <span className="font-semibold text-gray-900">Net Total:</span>
+                <span className="font-bold text-lg text-blue-600">Rs. {calculateNetTotal().toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
+          <button className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={items.length === 0 || !selectedCustomer}
+            className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            Save Invoice
+          </button>
+        </div>
+      </div>
+
+      {/* Customer Search Modal */}
+      {showCustomerSearch && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100]">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden mx-4">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-900">Search Customer</h3>
+              <button
+                onClick={() => setShowCustomerSearch(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+                <input
+                  type="text"
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search by name or phone..."
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {filteredCustomers.map((customer) => (
+                <button
+                  key={customer.id}
+                  onClick={() => selectCustomer(customer)}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{customer.name}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{customer.phone}</p>
+                      <p className="text-xs text-gray-500 mt-1">{customer.address}</p>
+                    </div>
+                    <span className="text-xs text-blue-600 font-medium">{customer.id}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Item Search Modal */}
+      {showItemSearch && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-gray-900">Search Item</h3>
+              <button
+                onClick={() => setShowItemSearch(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search by item name or code..."
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              {filteredItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => addItem(item)}
+                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 transition-colors"
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-600">Code: {item.code}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-blue-600">Rs. {item.price}</p>
+                      <p className="text-xs text-gray-600">Stock: {item.stock}</p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
