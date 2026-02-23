@@ -95,7 +95,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       label: 'Quotation',
       icon: <FileCheck className="w-4 h-4" />,
       children: [
-        { id: 'quotation-new', label: 'New' },
         { id: 'quotation-all', label: 'View All' },
       ],
     },

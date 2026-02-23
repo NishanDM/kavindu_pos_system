@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect  } from 'react';
 import { Plus, Search, X, Trash2 } from 'lucide-react';
+import { PurchaseOrderFormModal } from './PurchaseOrderFormModal';
+import { FiMoreVertical } from 'react-icons/fi';
+import { ItemTableCommon } from '../common_use_components/ItemTableCommon';
 
 interface POItem {
   id: string;
@@ -9,6 +12,28 @@ interface POItem {
   unitPrice: number;
   total: number;
 }
+
+interface Product {
+  id: string;
+  name: string;
+  code: string;
+  supplierItemCode: string;
+  costPrice: number;
+  sellingPrice: number;
+}
+
+const handleSelectProduct = (product: Product) => {
+  const newItem: POItem = {
+    id: Date.now().toString(),
+    itemName: product.name,
+    itemCode: product.code,
+    qty: 1,
+    unitPrice: product.costPrice,
+    total: product.costPrice,
+  };
+
+  setItems(prev => [...prev, newItem]);
+};
 
 interface PurchaseOrder {
   id: string;
@@ -23,30 +48,170 @@ interface PurchaseOrder {
 
 export function PurchaseOrderManagement() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([
-    {
-      id: 'PO-001',
-      poDate: '2026-02-10',
-      supplierName: 'ABC Auto Parts Ltd',
-      deliveryDate: '2026-02-20',
-      items: [
-        { id: '1', itemName: 'Engine Oil 10W-40', itemCode: 'EO-001', qty: 100, unitPrice: 1200, total: 120000 },
-      ],
-      total: 120000,
-      status: 'pending',
-      remarks: 'Urgent order for month-end stock',
-    },
+     {
+    id: 'PO-001',
+    poDate: '2026-02-01',
+    supplierName: 'ABC Auto Parts Ltd',
+    deliveryDate: '2026-02-05',
+    items: [
+      { id: '1', itemName: 'Engine Oil 10W-40', itemCode: 'EO-001', qty: 50, unitPrice: 1200, total: 60000 },
+    ],
+    total: 60000,
+    status: 'pending',
+    remarks: 'Weekly stock refill',
+  },
+  {
+    id: 'PO-002',
+    poDate: '2026-02-02',
+    supplierName: 'Speed Motors Supply',
+    deliveryDate: '2026-02-07',
+    items: [
+      { id: '1', itemName: 'Oil Filter', itemCode: 'OF-002', qty: 100, unitPrice: 350, total: 35000 },
+    ],
+    total: 35000,
+    status: 'pending',
+    remarks: 'Fast moving item',
+  },
+  {
+    id: 'PO-003',
+    poDate: '2026-02-03',
+    supplierName: 'Global Auto Components',
+    deliveryDate: '2026-02-08',
+    items: [
+      { id: '1', itemName: 'Air Filter', itemCode: 'AF-003', qty: 80, unitPrice: 500, total: 40000 },
+    ],
+    total: 40000,
+    status: 'approved',
+    remarks: 'Monthly requirement',
+  },
+  {
+    id: 'PO-004',
+    poDate: '2026-02-04',
+    supplierName: 'Prime Parts Co',
+    deliveryDate: '2026-02-09',
+    items: [
+      { id: '1', itemName: 'Brake Pads', itemCode: 'BP-004', qty: 60, unitPrice: 1500, total: 90000 },
+    ],
+    total: 90000,
+    status: 'pending',
+    remarks: 'Brake service stock',
+  },
+  {
+    id: 'PO-005',
+    poDate: '2026-02-05',
+    supplierName: 'AutoPro Distributors',
+    deliveryDate: '2026-02-10',
+    items: [
+      { id: '1', itemName: 'Coolant 5L', itemCode: 'CL-005', qty: 40, unitPrice: 1800, total: 72000 },
+    ],
+    total: 72000,
+    status: 'pending',
+    remarks: 'Coolant restock',
+  },
+  {
+    id: 'PO-006',
+    poDate: '2026-02-06',
+    supplierName: 'Mega Auto Supplies',
+    deliveryDate: '2026-02-11',
+    items: [
+      { id: '1', itemName: 'Spark Plug', itemCode: 'SP-006', qty: 200, unitPrice: 250, total: 50000 },
+    ],
+    total: 50000,
+    status: 'approved',
+    remarks: 'High demand item',
+  },
+  {
+    id: 'PO-007',
+    poDate: '2026-02-07',
+    supplierName: 'Elite Auto Traders',
+    deliveryDate: '2026-02-12',
+    items: [
+      { id: '1', itemName: 'Battery 12V', itemCode: 'BT-007', qty: 30, unitPrice: 8500, total: 255000 },
+    ],
+    total: 255000,
+    status: 'pending',
+    remarks: 'Battery stock',
+  },
+  {
+    id: 'PO-008',
+    poDate: '2026-02-08',
+    supplierName: 'Rapid Parts Center',
+    deliveryDate: '2026-02-13',
+    items: [
+      { id: '1', itemName: 'Transmission Oil', itemCode: 'TO-008', qty: 45, unitPrice: 2200, total: 99000 },
+    ],
+    total: 99000,
+    status: 'pending',
+    remarks: 'Transmission service stock',
+  },
+  {
+    id: 'PO-009',
+    poDate: '2026-02-09',
+    supplierName: 'Superior Auto Parts',
+    deliveryDate: '2026-02-14',
+    items: [
+      { id: '1', itemName: 'Clutch Plate', itemCode: 'CP-009', qty: 25, unitPrice: 4500, total: 112500 },
+    ],
+    total: 112500,
+    status: 'cancelled',
+    remarks: 'Clutch replacement stock',
+  },
+  {
+    id: 'PO-010',
+    poDate: '2026-02-10',
+    supplierName: 'NextGen Auto Supply',
+    deliveryDate: '2026-02-15',
+    items: [
+      { id: '1', itemName: 'Brake Fluid', itemCode: 'BF-010', qty: 70, unitPrice: 900, total: 63000 },
+    ],
+    total: 63000,
+    status: 'partial',
+    remarks: 'Brake fluid refill',
+  },
   ]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showItemSearch, setShowItemSearch] = useState(false);
   const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [items, setItems] = useState<POItem[]>([]);
+  const menuRef = useRef<HTMLTableCellElement | null>(null);
   const [formData, setFormData] = useState({
     poDate: new Date().toISOString().split('T')[0],
     supplierName: '',
     deliveryDate: '',
     remarks: '',
   });
+
+  const [dateFrom, setDateFrom] = useState('');
+const [dateTo, setDateTo] = useState('');
+const [selectedSupplier, setSelectedSupplier] = useState('');
+const [selectedStatus, setSelectedStatus] = useState('');
+const suppliers = [...new Set(orders.map(order => order.supplierName))];
+
+  useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      setMenuOpen(null);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
+
+    const [menuOpen, setMenuOpen] = useState<string | null>(null); // Track which row's menu is open
+
+  const toggleMenu = (id: string) => {
+    setMenuOpen(menuOpen === id ? null : id);
+  };
+
+  const handleMenuClick = (action: 'view' | 'edit', orderId: string) => {
+    console.log(`${action} clicked for ${orderId}`);
+    setMenuOpen(null); // Close the menu
+  };
 
   // Mock items
   const mockItems = [
@@ -110,11 +275,34 @@ export function PurchaseOrderManagement() {
     });
   };
 
-  const filteredOrders = orders.filter(order =>
-    order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.supplierName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const filteredOrders = orders.filter(order => {
 
+  const matchesSearch =
+    order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    order.supplierName.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const orderDate = new Date(order.poDate);
+
+  const matchesDateFrom =
+    !dateFrom || orderDate >= new Date(dateFrom);
+
+  const matchesDateTo =
+    !dateTo || orderDate <= new Date(dateTo);
+
+  const matchesSupplier =
+    !selectedSupplier || order.supplierName === selectedSupplier;
+
+  const matchesStatus =
+    !selectedStatus || order.status === selectedStatus;
+
+  return (
+    matchesSearch &&
+    matchesDateFrom &&
+    matchesDateTo &&
+    matchesSupplier &&
+    matchesStatus
+  );
+});
   const filteredItems = mockItems.filter(item =>
     item.name.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
     item.code.toLowerCase().includes(itemSearchQuery.toLowerCase())
@@ -124,11 +312,37 @@ export function PurchaseOrderManagement() {
     const styles = {
       pending: 'bg-yellow-100 text-yellow-700',
       partial: 'bg-blue-100 text-blue-700',
-      completed: 'bg-green-100 text-green-700',
+      approved: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     };
     return <span className={`px-2 py-0.5 rounded text-xs font-medium ${styles[status as keyof typeof styles]}`}>{status.toUpperCase()}</span>;
   };
+
+  const handleSelectProduct = (product: Product) => {
+  setItems(prev => {
+    const exists = prev.find(i => i.itemCode === product.code);
+
+    if (exists) {
+      return prev.map(i =>
+        i.itemCode === product.code
+          ? { ...i, qty: i.qty + 1, total: (i.qty + 1) * i.unitPrice }
+          : i
+      );
+    }
+
+    return [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        itemName: product.name,
+        itemCode: product.code,
+        qty: 1,
+        unitPrice: product.costPrice,
+        total: product.costPrice,
+      },
+    ];
+  });
+};
 
   return (
     <div className="p-6">
@@ -146,22 +360,78 @@ export function PurchaseOrderManagement() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Search PO..."
-          />
-        </div>
-      </div>
+      {/* Filter Options */}
+<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+  <div className="flex flex-wrap gap-3 items-center">
+
+    {/* Search */}
+    <div className="relative flex-1 min-w-[200px]">
+      <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Search PO or Supplier..."
+      />
+    </div>
+
+    {/* Date From */}
+    <div>
+      <input
+        type="date"
+        value={dateFrom}
+        onChange={(e) => setDateFrom(e.target.value)}
+        className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Date To */}
+    <div>
+      <input
+        type="date"
+        value={dateTo}
+        onChange={(e) => setDateTo(e.target.value)}
+        className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    {/* Supplier Dropdown */}
+    <div>
+      <select
+        value={selectedSupplier}
+        onChange={(e) => setSelectedSupplier(e.target.value)}
+        className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Suppliers</option>
+        {suppliers.map((supplier) => (
+          <option key={supplier} value={supplier}>
+            {supplier}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* Status Dropdown */}
+    <div>
+      <select
+        value={selectedStatus}
+        onChange={(e) => setSelectedStatus(e.target.value)}
+        className="px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="partial">Partial</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+  </div>
+</div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 ">
         <table className="w-full text-xs">
           <thead className="bg-gray-50">
             <tr>
@@ -171,17 +441,46 @@ export function PurchaseOrderManagement() {
               <th className="px-4 py-3 text-left font-medium text-gray-700">Delivery Date</th>
               <th className="px-4 py-3 text-right font-medium text-gray-700">Total Amount</th>
               <th className="px-4 py-3 text-center font-medium text-gray-700">Status</th>
+              <th className="px-4 py-3 text-center font-medium text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredOrders.map((order) => (
               <tr key={order.id} className="border-t border-gray-200 hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-blue-600">{order.id}</td>
-                <td className="px-4 py-3">{new Date(order.poDate).toLocaleDateString()}</td>
-                <td className="px-4 py-3">{order.supplierName}</td>
-                <td className="px-4 py-3">{new Date(order.deliveryDate).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-right font-semibold">Rs. {order.total.toFixed(2)}</td>
-                <td className="px-4 py-3 text-center">{getStatusBadge(order.status)}</td>
+                <td className="px-4 py-1 font-medium text-blue-600">{order.id}</td>
+                <td className="px-4 py-1">{new Date(order.poDate).toLocaleDateString()}</td>
+                <td className="px-4 py-1">{order.supplierName}</td>
+                <td className="px-4 py-1">{new Date(order.deliveryDate).toLocaleDateString()}</td>
+                <td className="px-4 py-1 text-right font-semibold">Rs. {order.total.toFixed(2)}</td>
+                <td className="px-4 py-1 text-center">{getStatusBadge(order.status)}</td>
+                <td
+                  ref={menuOpen === order.id ? menuRef : null}
+                  className="px-4 py-1 text-center relative"
+                >
+                  <button
+                    onClick={() => toggleMenu(order.id)}
+                    className="p-1 rounded hover:bg-gray-100"
+                  >
+                    <FiMoreVertical className="w-5 h-5 text-gray-600" />
+                  </button>
+
+                  {menuOpen === order.id && (
+                    <div className="absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow-lg z-10">
+                      <button
+                        onClick={() => handleMenuClick('view', order.id)}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleMenuClick('edit', order.id)}
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -190,193 +489,24 @@ export function PurchaseOrderManagement() {
 
       {/* Add Form Modal */}
       {showAddForm && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start justify-center z-[100] overflow-y-auto pt-20 pb-10">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl my-auto mx-4">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900">New Purchase Order</h3>
-              <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">PO Date *</label>
-                  <input
-                    type="date"
-                    value={formData.poDate}
-                    onChange={(e) => setFormData({ ...formData, poDate: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Supplier Name *</label>
-                  <input
-                    type="text"
-                    value={formData.supplierName}
-                    onChange={(e) => setFormData({ ...formData, supplierName: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Expected Delivery Date</label>
-                  <input
-                    type="date"
-                    value={formData.deliveryDate}
-                    onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Items Section */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-xs font-medium text-gray-700">Items</label>
-                  <button
-                    onClick={() => setShowItemSearch(true)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" />
-                    Add Item
-                  </button>
-                </div>
-
-                {items.length > 0 && (
-                  <div className="border border-gray-200 rounded overflow-hidden">
-                    <table className="w-full text-xs">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Item</th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-700">Code</th>
-                          <th className="px-3 py-2 text-right font-medium text-gray-700">Qty</th>
-                          <th className="px-3 py-2 text-right font-medium text-gray-700">Unit Price</th>
-                          <th className="px-3 py-2 text-right font-medium text-gray-700">Total</th>
-                          <th className="px-3 py-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item) => (
-                          <tr key={item.id} className="border-t border-gray-200">
-                            <td className="px-3 py-2">{item.itemName}</td>
-                            <td className="px-3 py-2">{item.itemCode}</td>
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                value={item.qty}
-                                onChange={(e) => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)}
-                                className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs"
-                                min="1"
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                value={item.unitPrice}
-                                onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
-                                className="w-20 px-2 py-1 text-right border border-gray-300 rounded text-xs"
-                                min="0"
-                                step="0.01"
-                              />
-                            </td>
-                            <td className="px-3 py-2 text-right font-medium">Rs. {item.total.toFixed(2)}</td>
-                            <td className="px-3 py-2">
-                              <button onClick={() => removeItem(item.id)} className="text-red-600 hover:text-red-800">
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Total */}
-              {items.length > 0 && (
-                <div className="flex justify-end mb-6">
-                  <div className="w-64 border-t border-gray-200 pt-2">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-gray-900">Total Amount:</span>
-                      <span className="font-bold text-lg text-blue-600">Rs. {calculateTotal().toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Remarks & Notes</label>
-                <textarea
-                  value={formData.remarks}
-                  onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                />
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white">
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={items.length === 0 || !formData.supplierName}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              >
-                Create Purchase Order
-              </button>
-            </div>
-          </div>
-        </div>
+        <PurchaseOrderFormModal
+          formData={formData}
+          setFormData={setFormData}
+          items={items}
+          updateItem={updateItem}
+          removeItem={removeItem}
+          calculateTotal={calculateTotal}
+          handleSave={handleSave}
+          setShowAddForm={setShowAddForm}
+          setShowItemSearch={setShowItemSearch}
+        />
       )}
+<ItemTableCommon
+  show={showItemSearch}
+  onClose={() => setShowItemSearch(false)}
+  onSelect={handleSelectProduct}
+/>
 
-      {/* Item Search Modal */}
-      {showItemSearch && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[70]">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-gray-900">Search Item</h3>
-              <button onClick={() => setShowItemSearch(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                <input
-                  type="text"
-                  value={itemSearchQuery}
-                  onChange={(e) => setItemSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Search by item name or code..."
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              {filteredItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => addItem(item)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-600">Code: {item.code}</p>
-                    </div>
-                    <p className="text-sm font-semibold text-blue-600">Rs. {item.unitPrice}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

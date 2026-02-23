@@ -56,6 +56,46 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
       time: '2 days ago',
       severity: 'low',
     },
+        {
+      id: '1',
+      type: 'low-stock',
+      title: 'Low Stock Alert',
+      message: 'Engine Oil 10W-40 is below reorder level (5 units remaining)',
+      time: '2 hours ago',
+      severity: 'high',
+    },
+    {
+      id: '2',
+      type: 'payment-due',
+      title: 'Payment Due',
+      message: 'Supplier payment for ABC Auto Parts Ltd due in 3 days (Rs. 45,000)',
+      time: '5 hours ago',
+      severity: 'medium',
+    },
+    {
+      id: '3',
+      type: 'outstanding',
+      title: 'Outstanding Payment',
+      message: 'Customer John Auto Parts has outstanding amount of Rs. 12,500',
+      time: '1 day ago',
+      severity: 'medium',
+    },
+    {
+      id: '4',
+      type: 'low-stock',
+      title: 'Low Stock Alert',
+      message: 'Brake Pad Set is below reorder level (3 units remaining)',
+      time: '1 day ago',
+      severity: 'high',
+    },
+    {
+      id: '5',
+      type: 'outstanding',
+      title: 'Outstanding Payment',
+      message: 'Invoice INV-202 pending payment Rs. 8,750',
+      time: '2 days ago',
+      severity: 'low',
+    },
   ];
 
   if (!isOpen) return null;
@@ -104,7 +144,7 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
           <div className="flex items-center gap-2">
             <Bell className="w-5 h-5 text-white" />
             <h3 className="text-base font-semibold text-white">Notifications</h3>
-            <span className="px-2 py-0.5 bg-white text-blue-600 text-xs rounded-full font-medium">
+            <span className="px-2 py-2 bg-white text-center text-red-500 font-bold text-xs rounded-full">
               {notifications.length}
             </span>
           </div>
@@ -144,13 +184,11 @@ export function NotificationPanel({ isOpen, onClose }: NotificationPanelProps) {
               ))}
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <button className="w-full py-2 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors">
+           <div className="p-4 flex border-t border-gray-200 bg-gray-50">
+          <button className="w-1/3 mx-auto py-2 text-xs text-white border-none rounded-2xl hover:bg-cyan-700 bg-green-600 ounded transition-colors cursor-pointer">
             Mark all as read
           </button>
+        </div>
         </div>
       </div>
     </div>
