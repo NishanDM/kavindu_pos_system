@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Plus, Search, X, Trash2, Filter, Eye, Edit,AlertCircle  } from 'lucide-react';
-import { AddNewGRN } from './AddNewGRN';
+
+import { useState, useRef, useEffect } from 'react';
+import {  Search  } from 'lucide-react';
+import { FiMoreVertical } from 'react-icons/fi';
 
 interface GRNItem {
   id: string;
@@ -25,7 +26,7 @@ interface GRN {
   status: 'SETTLED' | 'PENDING' | 'PARTIALLY PAID' | 'OVER PAID';
 }
 
-export function GRNManagement() {
+export function GRNSettlement() {
   const [grns, setGrns] = useState<GRN[]>([
      {
     id: 'GRN-001',
@@ -163,8 +164,49 @@ export function GRNManagement() {
   });
 
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [paymentFilter, setPaymentFilter] = useState('ALL');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [dropdownDirection, setDropdownDirection] = useState<'down' | 'up'>('down');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+const toggleDropdown = (id: string) => {
+  if (openDropdownId === id) {
+    setOpenDropdownId(null);
+    return;
+  }
+
+  const buttonElement = document.getElementById(`dropdown-btn-${id}`);
+  if (buttonElement) {
+    const rect = buttonElement.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = 120; // approx height of dropdown in px
+    if (spaceBelow < dropdownHeight) {
+      setDropdownDirection('up');
+    } else {
+      setDropdownDirection('down');
+    }
+  }
+
+  setOpenDropdownId(id);
+};
+
+const dropdownRef = useRef<HTMLDivElement | null>(null);
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
+      setOpenDropdownId(null);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, []);
 
   // Mock items for search
   const mockItems = [
@@ -221,7 +263,7 @@ export function GRNManagement() {
     });
   };
 
-  const filteredGRNs = grns.filter((grn) => {
+const filteredGRNs = grns.filter((grn) => {
 
   const matchesSearch =
     grn.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -231,6 +273,9 @@ export function GRNManagement() {
   const matchesStatus =
     statusFilter === 'ALL' || grn.status === statusFilter;
 
+  const matchesPayment =
+    paymentFilter === 'ALL' || grn.paymentMethod === paymentFilter;
+
   const grnDate = new Date(grn.grnDate);
 
   const matchesFromDate =
@@ -239,8 +284,9 @@ export function GRNManagement() {
   const matchesToDate =
     !toDate || grnDate <= new Date(toDate);
 
-  return matchesSearch && matchesStatus && matchesFromDate && matchesToDate;
+  return matchesSearch && matchesStatus && matchesPayment && matchesFromDate && matchesToDate;
 });
+
   const filteredItems = mockItems.filter(item =>
     item.name.toLowerCase().includes(itemSearchQuery.toLowerCase()) ||
     item.code.toLowerCase().includes(itemSearchQuery.toLowerCase())
@@ -269,16 +315,8 @@ export function GRNManagement() {
     <div className="p-6">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">GRN Management</h2>
-          <p className="text-xs text-gray-600 mt-1">Goods Received Notes</p>
+          <h2 className="text-xl font-semibold text-gray-900">GRN Settlement</h2>
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New GRN
-        </button>
       </div>
 
       {/* Search */}
@@ -293,9 +331,22 @@ export function GRNManagement() {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Search GRN..."
+        placeholder="Search GRN here with ID, Inv No. ,Supplier etc. ..."
       />
     </div>
+
+    {/* Payment Method Filter */}
+<select
+  value={paymentFilter}
+  onChange={(e) => setPaymentFilter(e.target.value)}
+  className="px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  <option value="ALL">All Payments</option>
+  <option value="Cash">Cash</option>
+  <option value="Credit">Credit</option>
+  <option value="Cheque">Cheque</option>
+  <option value="Bank Transfer">Bank Transfer</option>
+</select>
 
     {/* Status Filter */}
     <select
@@ -331,6 +382,7 @@ export function GRNManagement() {
       onClick={() => {
         setSearchQuery('');
         setStatusFilter('ALL');
+        setPaymentFilter('ALL');
         setFromDate('');
         setToDate('');
       }}
@@ -340,6 +392,27 @@ export function GRNManagement() {
     </button>
 
   </div>
+</div>
+
+    {/* Supplier Dropdown  & Outstanding*/}
+<div className='flex cols-3 gap-10'>
+  <select
+
+  className="px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+>
+  <option >Select Supllier To View Outstanding</option>
+  <option >Supplier 1</option>
+  <option >Supplier 2</option>
+  <option >Supplier 3</option>
+  <option >Supplier 4</option>
+</select>
+
+<div className='m-1'>
+  <h2 className='text-gray-600'>Outstanding Amount: </h2>
+</div>
+<div className='m-1'>
+  <h2 className='text-gray-600'>Rs. 0 </h2>
+</div>
 </div>
 
       {/* GRN Table */}
@@ -381,51 +454,50 @@ export function GRNManagement() {
                     {grn.status}
                   </span>
                 </td>
-                 <td className="px-3 py-3">
-                      <div className="flex justify-center gap-1">
-                        <button
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onEdit(item)}
-                          className="p-1 text-gray-600 hover:bg-gray-100 rounded"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(item.id)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+<td className="px-3 py-3 relative">
+  <div ref={dropdownRef} className="relative inline-block text-left">
+<button
+  id={`dropdown-btn-${grn.id}`}
+  onClick={() => toggleDropdown(grn.id)}
+  className="p-1 text-gray-600 hover:bg-gray-100 rounded ml-4"
+  title="Actions"
+>
+<FiMoreVertical className="h-5 w-5" />
+</button>
+
+{openDropdownId === grn.id && (
+  <div
+    className={`absolute right-0 w-32 bg-white border border-gray-200 rounded shadow-lg z-10 ${
+      dropdownDirection === 'down' ? 'mt-0' : 'mb-0 bottom-full'
+    }`}
+  >
+    <button
+      className="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-100"
+      onClick={() => {
+        console.log('View', grn.id);
+        setOpenDropdownId(null);
+      }}
+    >
+      View
+    </button>
+    <button
+      className="w-full text-left px-4 py-1 text-sm text-gray-700 hover:bg-gray-100"
+      onClick={() => {
+        console.log('Edit', grn.id);
+        setOpenDropdownId(null);
+      }}
+    >
+      Pay
+    </button>
+  </div>
+)}
+  </div>
+</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-
-      <AddNewGRN
-          show={showAddForm}
-          onClose={() => setShowAddForm(false)}
-          onSave={handleSave}
-          formData={formData}
-          setFormData={setFormData}
-          items={items}
-          setItems={setItems}
-          calculateSubTotal={calculateSubTotal}
-          calculateNetTotal={calculateNetTotal}
-          updateItem={updateItem}
-          removeItem={removeItem}
-          
-        />
     </div>
   );
 }

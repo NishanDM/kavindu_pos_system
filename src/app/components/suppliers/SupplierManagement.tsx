@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, X } from 'lucide-react';
+import { AddSupplier } from './AddSupplier';
+import { ViewSupplier } from './ViewSupplier';
 
 interface Supplier {
   id: string;
@@ -33,6 +35,10 @@ export function SupplierManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [formData, setFormData] = useState<Partial<Supplier>>({});
+  const [viewSupplier, setViewSupplier] = useState<Supplier | null>(null);
+  const [showView, setShowView] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
 
   const handleAdd = () => {
     setFormData({});
@@ -63,11 +69,23 @@ export function SupplierManagement() {
     setShowAddForm(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this supplier?')) {
-      setSuppliers(suppliers.filter(s => s.id !== id));
-    }
-  };
+const handleDeleteClick = (supplier: Supplier) => {
+  setSupplierToDelete(supplier);
+  setShowDeleteConfirm(true);
+};
+
+const confirmDelete = () => {
+  if (supplierToDelete) {
+    setSuppliers(suppliers.filter(s => s.id !== supplierToDelete.id));
+    setSupplierToDelete(null);
+    setShowDeleteConfirm(false);
+  }
+};
+
+const cancelDelete = () => {
+  setSupplierToDelete(null);
+  setShowDeleteConfirm(false);
+};
 
   const filteredSuppliers = suppliers.filter(supplier =>
     supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,6 +151,10 @@ export function SupplierManagement() {
                     <button
                       className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                       title="View"
+                        onClick={() => {
+                      setViewSupplier(supplier);
+                      setShowView(true);
+                    }}
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -144,7 +166,7 @@ export function SupplierManagement() {
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(supplier.id)}
+                      onClick={() => handleDeleteClick(supplier)}
                       className="p-1 text-red-600 hover:bg-red-50 rounded"
                       title="Delete"
                     >
@@ -158,98 +180,69 @@ export function SupplierManagement() {
         </table>
       </div>
 
-      {/* Add/Edit Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-start justify-center z-[100] overflow-y-auto pt-20 pb-10">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl my-auto mx-4">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
-              </h3>
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Supplier Name *</label>
-                  <input
-                    type="text"
-                    value={formData.name || ''}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Address *</label>
-                  <textarea
-                    value={formData.address || ''}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={2}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Contact Number *</label>
-                    <input
-                      type="tel"
-                      value={formData.contactNumber || ''}
-                      onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">WhatsApp Number</label>
-                    <input
-                      type="tel"
-                      value={formData.whatsappNumber || ''}
-                      onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email || ''}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
-              >
-                {editingSupplier ? 'Update' : 'Add'} Supplier
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Summary Card */}
       <div className="mt-4 bg-cyan-50 border border-cyan-200 rounded-lg p-4">
         <p className="text-xs text-cyan-700 mb-1">Total Suppliers</p>
         <p className="text-2xl font-bold text-cyan-900">{suppliers.length}</p>
       </div>
+
+
+{showDeleteConfirm && (
+  <div className="fixed inset-0 flex items-center justify-center bg-none z-50">
+    <div className="bg-white rounded-lg shadow-lg w-80 p-4">
+      
+      {/* Header */}
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Confirm Delete
+        </h3>
+        <button
+          onClick={cancelDelete}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Body */}
+      <p className="text-xs text-gray-600 mb-4">
+        Are you sure you want to delete{" "}
+        <span className="font-medium">{supplierToDelete?.name}</span>?
+      </p>
+
+      {/* Footer */}
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={cancelDelete}
+          className="px-3 py-1 text-xs border rounded hover:bg-gray-100"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={confirmDelete}
+          className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Delete
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+      <AddSupplier
+  show={showAddForm}
+  editingSupplier={editingSupplier}
+  formData={formData}
+  setFormData={setFormData}
+  onClose={() => setShowAddForm(false)}
+  onSave={handleSave}
+/>
+<ViewSupplier
+  show={showView}
+  supplier={viewSupplier}
+  onClose={() => setShowView(false)}
+/>
     </div>
   );
 }

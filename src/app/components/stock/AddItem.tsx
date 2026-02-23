@@ -36,6 +36,11 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
     imageUrl: '',
     color: '',
   });
+  const subCategoryMap: Record<string, string[]> = {
+  grease: ['Yellow', 'Blue', 'Red', 'CV', 'Rubber Grease'],
+  oil: ['Gear Oil', 'Engine Oil'],
+  'engine parts': ['Motor Bike', 'Vehicle'],
+};
 
   const categories = ['oil', 'grease', 'sealant', 'engine parts', 'bearing', 'belt', 'body parts', 'electrical parts', 'battery'];
   const itemTypes = ['Unit', 'Set', 'Pcs', 'Kilo', 'Gram', 'Liter'];
@@ -44,6 +49,18 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+const categoryData: Record<string, string[]> = {
+  grease: ['Yellow', 'Blue', 'Red', 'CV', 'Rubber Grease'],
+  oil: ['Gear Oil', 'Engine Oil'],
+  'engine parts': ['Motor Bike', 'Vehicle'],
+  sealant: [],
+  bearing: [],
+  belt: [],
+  'body parts': [],
+  'electrical parts': [],
+  battery: [],
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,26 +96,45 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
           <div className="grid grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Category *</label>
-              <select
-                value={formData.category}
-                onChange={(e) => handleChange('category', e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+<select
+  value={formData.category}
+  onChange={(e) => {
+    handleChange('category', e.target.value);
+    handleChange('subCategory', '');
+  }}
+  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+  required
+>
+  <option value="">Select Category</option>
+  {categories.map((cat) => (
+    <option key={cat} value={cat}>
+      {cat}
+    </option>
+  ))}
+</select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Sub Category</label>
-              <input
-                type="text"
-                value={formData.subCategory}
-                onChange={(e) => handleChange('subCategory', e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+<select
+  value={formData.subCategory}
+  onChange={(e) => handleChange('subCategory', e.target.value)}
+  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  {!formData.category ? (
+    <option value="">Select Category First</option>
+  ) : categoryData[formData.category]?.length === 0 ? (
+    <option value="">NULL</option>
+  ) : (
+    <>
+      <option value="">Select Sub Category</option>
+      {categoryData[formData.category]?.map((sub) => (
+        <option key={sub} value={sub}>
+          {sub}
+        </option>
+      ))}
+    </>
+  )}
+</select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Model</label>
@@ -118,12 +154,21 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
                 className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <div className='columns-2'>
+              <button className="px-2 py-1 text-sm text-white cursor-pointer bg-cyan-800 rounded hover:bg-cyan-900 transition-colors flex items-center gap-2">Add Category</button>
+              <button className="px-2 py-1 text-sm text-white cursor-pointer bg-cyan-800 rounded hover:bg-cyan-900 transition-colors flex items-center gap-2">Re-fresh</button>
+            </div>
+            <div className='columns-2'>
+            <button className="px-2 py-1 text-sm text-white cursor-pointer bg-green-700 rounded hover:bg-green-800 transition-colors flex items-center gap-2">Add Sub Cat:</button>
+             <button className="px-2 py-1 text-sm text-white cursor-pointer bg-green-700 rounded hover:bg-green-800 transition-colors flex items-center gap-2">Re-fresh</button>
           </div>
+          </div>
+          
         </div>
         {/* Basic Information */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">Basic Information</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Item Name *</label>
               <input
@@ -144,6 +189,15 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
               />
             </div>
             <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Supplier Item Code</label>
+              <input
+                type="text"
+                value={formData.supplierItemCode}
+                onChange={(e) => handleChange('supplierItemCode', e.target.value)}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">My Item Code *</label>
               <input
                 type="text"
@@ -154,16 +208,12 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
               />
             </div>
           </div>
-                    <div className="grid grid-cols-3 gap-4 pt-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Supplier Item Code</label>
-              <input
-                type="text"
-                value={formData.supplierItemCode}
-                onChange={(e) => handleChange('supplierItemCode', e.target.value)}
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+        <div className="grid grid-cols-3 gap-4 pt-3">
+          <div>
+           <button className="px-2 py-1 text-sm text-white cursor-pointer bg-cyan-800 rounded hover:bg-cyan-900 transition-colors flex items-center gap-2">Paste to My Item Code</button>
+          </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4 pt-3">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Part Number</label>
               <input
@@ -182,7 +232,7 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
                 className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-          </div>
+        </div>
         </div>
 
         <div className="mb-6">
@@ -208,7 +258,7 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
         {/* Pricing & Inventory */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">Pricing & Inventory</h3>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-6 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Item Type</label>
               <select
@@ -220,6 +270,9 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
                   <option key={type} value={type}>{type}</option>
                 ))}
               </select>
+            </div>
+            <div className='mt-5'>
+            <button className="w-full px-2 py-1.5 text-sm text-white cursor-pointer bg-cyan-800 rounded hover:bg-cyan-900 transition-colors  items-center ">Add Item Type</button>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Cost Price *</label>
@@ -243,8 +296,15 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
                 required
               />
             </div>
+              <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Discount Type</label>
+              <select className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500" name="" id="">
+                <option value="">LKR</option>
+                <option value="">Percentage (%)</option>
+              </select>
+            </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Discount (%)</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Discount</label>
               <input
                 type="number"
                 step="0.01"
@@ -294,8 +354,6 @@ export function AddItem({ onSave, onCancel }: AddItemProps) {
             </div>
           </div>
         </div>
-
-
 
         {/* Supplier Information */}
         <div className="mb-6">

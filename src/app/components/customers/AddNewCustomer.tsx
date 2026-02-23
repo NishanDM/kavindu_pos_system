@@ -7,6 +7,8 @@ interface Customer {
   whatsappNumber: string;
   phone: string;
   brNumber?: string;
+  creditLimit: number;
+  creditPeriod: number;
   idImage?: string;
   agreementPhoto?: string;
 }
@@ -53,7 +55,20 @@ export function AddNewCustomer({
         {/* Body */}
         <div className="p-6">
           <div className="space-y-4">
-
+            {/* Customer ID */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Customer Code *
+              </label>
+              <input
+                type="text"
+                value={formData.id || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, id: e.target.value })
+                }
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
             {/* Name */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -135,6 +150,44 @@ export function AddNewCustomer({
                   setFormData({
                     ...formData,
                     brNumber: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+           {/* Credit Limit */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Credit Limit
+              </label>
+              <input
+              placeholder="10 00 000"
+                type="number"
+                value={formData.creditLimit || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    creditLimit: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Credit Period */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Credit Period (Number of Days)
+              </label>
+              <input
+              placeholder="60"
+                type="number"
+                value={formData.creditPeriod || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    creditPeriod: e.target.value,
                   })
                 }
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"

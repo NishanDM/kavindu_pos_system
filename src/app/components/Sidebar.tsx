@@ -27,7 +27,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['invoice']);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>('invoice');
 
   const menuItems: MenuItem[] = [
     {
@@ -36,8 +36,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <FileText className="w-4 h-4" />,
       children: [
         { id: 'invoice-new', label: 'New Invoice' },
-        { id: 'invoice-all', label: 'View All Invoices' },
-        { id: 'invoice-pending', label: 'Pending Invoices' },
+        { id: 'invoice-all', label: 'View All' },
       ],
     },
     {
@@ -45,8 +44,11 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       label: 'Customers',
       icon: <Users className="w-4 h-4" />,
       children: [
-        { id: 'customers-new', label: 'Add Customer' },
-        { id: 'customers-all', label: 'View All Customers' },
+        
+        { id: 'customers-all', label: 'View All' },
+        { id: 'customers-outstanding', label: 'Outstanding' },
+        { id: 'customers-credit-note', label: 'Credit Note' },
+        { id: 'customers-settlement', label: 'Settlement' },
       ],
     },
     {
@@ -55,9 +57,8 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <Package className="w-4 h-4" />,
       children: [
         { id: 'stock-items', label: 'Items' },
-        { id: 'stock-add', label: 'Add New Item' },
+        { id: 'stock-add', label: 'Add New' },
         { id: 'stock-categories', label: 'Categories' },
-        { id: 'stock-low', label: 'Low Stock Items' },
       ],
     },
     {
@@ -65,8 +66,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       label: 'Suppliers',
       icon: <Truck className="w-4 h-4" />,
       children: [
-        { id: 'suppliers-new', label: 'Add Supplier' },
-        { id: 'suppliers-all', label: 'View All Suppliers' },
+        { id: 'suppliers-all', label: 'View All' },
         { id: 'suppliers-outstandings', label: 'Outstandings' },
       ],
     },
@@ -85,10 +85,9 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       label: 'PO & GRN',
       icon: <ClipboardList className="w-4 h-4" />,
       children: [
-        { id: 'po-new', label: 'New Purchase Order' },
-        { id: 'po-all', label: 'View All PO' },
-        { id: 'grn-new', label: 'New GRN' },
-        { id: 'grn-all', label: 'View All GRN' },
+        { id: 'po-all', label: 'All PO' },
+        { id: 'grn-all', label: 'All GRN' },
+        { id: 'grn-settlement', label: 'Settlement' },
       ],
     },
     {
@@ -96,22 +95,18 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       label: 'Quotation',
       icon: <FileCheck className="w-4 h-4" />,
       children: [
-        { id: 'quotation-new', label: 'New Quotation' },
-        { id: 'quotation-all', label: 'View All Quotations' },
+        { id: 'quotation-new', label: 'New' },
+        { id: 'quotation-all', label: 'View All' },
       ],
     },
   ];
 
-  const toggleMenu = (menuId: string) => {
-    setExpandedMenus((prev) =>
-      prev.includes(menuId)
-        ? prev.filter((id) => id !== menuId)
-        : [...prev, menuId]
-    );
-  };
+const toggleMenu = (menuId: string) => {
+  setExpandedMenu((prev) => (prev === menuId ? null : menuId));
+};
 
   return (
-    <aside className="w-64 bg-slate-800 text-slate-200 fixed left-0 top-14 bottom-0 overflow-y-auto z-20 shadow-xl">
+    <aside className="w-40 bg-slate-800 text-slate-200 fixed left-0 top-14 bottom-0 overflow-y-auto z-20 shadow-xl">
       <nav className="py-4">
         {menuItems.map((item) => (
           <div key={item.id} className="mb-1">
@@ -132,7 +127,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
                 <span>{item.label}</span>
               </div>
               {item.children && (
-                expandedMenus.includes(item.id) ? (
+                expandedMenu === item.id ? (
                   <ChevronDown className="w-4 h-4" />
                 ) : (
                   <ChevronRight className="w-4 h-4" />
@@ -140,21 +135,21 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
               )}
             </button>
 
-            {item.children && expandedMenus.includes(item.id) && (
-              <div className="bg-slate-900">
-                {item.children.map((child) => (
-                  <button
-                    key={child.id}
-                    onClick={() => onSectionChange(child.id)}
-                    className={`w-full text-left px-11 py-2 text-xs hover:bg-slate-700 transition-colors ${
-                      activeSection === child.id ? 'bg-blue-600 text-white' : ''
-                    }`}
-                  >
-                    {child.label}
-                  </button>
-                ))}
-              </div>
-            )}
+{item.children && expandedMenu === item.id && (
+  <div className="bg-slate-900">
+    {item.children.map((child) => (
+      <button
+        key={child.id}
+        onClick={() => onSectionChange(child.id)}
+        className={`w-full text-left px-11 py-2 text-xs hover:bg-slate-700 transition-colors ${
+          activeSection === child.id ? 'bg-blue-600 text-white' : ''
+        }`}
+      >
+        {child.label}
+      </button>
+    ))}
+  </div>
+)}
           </div>
         ))}
       </nav>

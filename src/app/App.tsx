@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Toaster } from "react-hot-toast";
 import { Login } from './components/Login';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -15,6 +16,7 @@ import { PurchaseOrderManagement } from './components/po/PurchaseOrderManagement
 import { QuotationManagement } from './components/quotation/QuotationManagement';
 import { AccountsDashboard } from './components/accounts/AccountsDashboard';
 import { ExpenseManagement } from './components/accounts/ExpenseManagement';
+import { GRNSettlement } from './components/grn/GRNSettlement';
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -234,7 +236,8 @@ export default function App() {
       case 'po-new':
       case 'po-all':
         return <PurchaseOrderManagement />;
-      case 'grn-new':
+      case 'grn-settlement':
+        return <GRNSettlement/>
       case 'grn-all':
         return <GRNManagement />;
 
@@ -257,6 +260,8 @@ export default function App() {
   const notificationCount = lowStockCount + 2; // + payment dues and outstanding
 
   return (
+<>
+ <Toaster position="top-right" reverseOrder={false} />
     <div className="h-screen w-screen overflow-hidden bg-gray-50">
       <Header
         user={user}
@@ -266,7 +271,7 @@ export default function App() {
       />
       <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
       
-      <main className="fixed left-64 right-0 top-14 bottom-0 overflow-y-auto">
+      <main className="fixed left-40 right-0 top-14 bottom-0 overflow-y-auto">
         {renderContent()}
       </main>
 
@@ -275,5 +280,6 @@ export default function App() {
         onClose={() => setShowNotifications(false)}
       />
     </div>
+</>
   );
 }

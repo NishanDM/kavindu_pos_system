@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, X } from 'lucide-react';
 import { AddNewCustomer } from "./AddNewCustomer";
+import { ViewCustomer } from './ViewCustomer';
+import { CustomerDeleteConfirm } from './CustomerDeleteConfirm';
 
 interface Customer {
   id: string;
@@ -9,7 +11,9 @@ interface Customer {
   whatsappNumber: string;
   phone: string;
   brNumber?: string;
+  creditLimit: number;
   idImage?: string;
+  creditPeriod:number;
   agreementPhoto?: string;
 }
 
@@ -20,6 +24,8 @@ export function CustomerManagement() {
       name: 'John Auto Parts',
       whatsappNumber: '+94771234567',
       address: '130, kadawatha',
+      creditLimit: 23000,
+      creditPeriod:60,
       phone: '+94771234567',
       brNumber: 'BR123456',
     },
@@ -27,6 +33,8 @@ export function CustomerManagement() {
       id: 'CUST-002',
       name: 'Lanka Motors',
       address: '130, kadawatha',
+      creditLimit: 23000,
+      creditPeriod:60,
       whatsappNumber: '+94779876543',
       phone: '+94119876543',
     },
@@ -35,6 +43,15 @@ export function CustomerManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState<Partial<Customer>>({});
+  const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+
+const handleView = (customer: Customer) => {
+  setViewCustomer(customer);
+  setShowViewModal(true);
+};
 
   const handleAdd = () => {
     setFormData({});
@@ -66,11 +83,18 @@ export function CustomerManagement() {
     setShowAddForm(false);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this customer?')) {
-      setCustomers(customers.filter(c => c.id !== id));
-    }
-  };
+const confirmDelete = () => {
+  if (customerToDelete) {
+    setCustomers(customers.filter(c => c.id !== customerToDelete.id));
+  }
+  setShowDeleteConfirm(false);
+  setCustomerToDelete(null);
+};
+
+const cancelDelete = () => {
+  setShowDeleteConfirm(false);
+  setCustomerToDelete(null);
+};
 
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -132,6 +156,7 @@ export function CustomerManagement() {
                 <td className="px-4 py-3">
                   <div className="flex justify-center gap-2">
                     <button
+                    onClick={() => handleView(customer)}
                       className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                       title="View"
                     >
@@ -145,7 +170,10 @@ export function CustomerManagement() {
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(customer.id)}
+                        onClick={() => {
+                        setCustomerToDelete(customer);
+                        setShowDeleteConfirm(true);
+                      }}
                       className="p-1 text-red-600 hover:bg-red-50 rounded"
                       title="Delete"
                     >
@@ -167,6 +195,19 @@ export function CustomerManagement() {
   editingCustomer={editingCustomer}
   formData={formData}
   setFormData={setFormData}
+/>
+
+<ViewCustomer
+  show={showViewModal}
+  onClose={() => setShowViewModal(false)}
+  customer={viewCustomer}
+/>
+
+<CustomerDeleteConfirm
+  show={showDeleteConfirm}
+  onCancel={cancelDelete}
+  onConfirm={confirmDelete}
+  customer={customerToDelete}
 />
 
       {/* Summary Card */}
