@@ -6,6 +6,7 @@ interface InvoiceItem {
   itemName: string;
   itemCode: string;
   qty: number;
+  cost: number;
   price: number;
   discount: number;
   total: number;
@@ -34,6 +35,29 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
 
+  // Credit
+const [creditDays, setCreditDays] = useState<number>(0);
+const [creditRemarks, setCreditRemarks] = useState('');
+
+// Cheque
+const [chequeDetails, setChequeDetails] = useState({
+  date: '',
+  chequeNo: '',
+  fromBank: '',
+  toBank: '',
+  branch: '',
+  amount: 0,
+  remark: '',
+});
+
+// Bank Transfer
+const [bankTransfer, setBankTransfer] = useState({
+  fromBank: '',
+  toBank: '',
+  amount: 0,
+  remark: '',
+});
+
   // Mock customers
   const mockCustomers: Customer[] = [
     { id: 'CUST-001', name: 'John Auto Parts', phone: '+94771234567', address: '123 Main St, Colombo 03' },
@@ -44,11 +68,11 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
 
   // Mock items for search
   const mockItems = [
-    { id: '1', name: 'Engine Oil 10W-40', code: 'EO-001', price: 1500, stock: 50 },
-    { id: '2', name: 'Brake Pad Set', code: 'BP-102', price: 2500, stock: 30 },
-    { id: '3', name: 'Chain Sprocket Kit', code: 'CS-203', price: 3500, stock: 20 },
-    { id: '4', name: 'Air Filter', code: 'AF-304', price: 800, stock: 45 },
-    { id: '5', name: 'Spark Plug', code: 'SP-405', price: 450, stock: 100 },
+    { id: '1', name: 'Engine Oil 10W-40', code: 'EO-001', price: 1500, cost: 150, stock: 50 },
+    { id: '2', name: 'Brake Pad Set', code: 'BP-102', price: 2500, cost: 150, stock: 30 },
+    { id: '3', name: 'Chain Sprocket Kit', code: 'CS-203', price: 3500, cost: 150, stock: 20 },
+    { id: '4', name: 'Air Filter', code: 'AF-304', price: 800, cost: 150, stock: 45 },
+    { id: '5', name: 'Spark Plug', code: 'SP-405', price: 450, cost: 150, stock: 100 },
   ];
 
   const selectCustomer = (customer: Customer) => {
@@ -64,6 +88,7 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
       itemName: item.name,
       itemCode: item.code,
       qty: 1,
+      cost: item.cost,
       price: item.price,
       discount: 0,
       total: item.price,
@@ -91,6 +116,13 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
   const calculateSubTotal = () => items.reduce((sum, item) => sum + (item.qty * item.price), 0);
   const calculateTotalDiscount = () => items.reduce((sum, item) => sum + item.discount, 0);
   const calculateNetTotal = () => calculateSubTotal() - calculateTotalDiscount();
+  const calculateProfit = () =>
+  items.reduce((sum, item) => {
+    const revenue = item.qty * item.price;
+    const cost = item.qty * item.cost;
+    const discountShare = item.discount; // assumes discount reduces profit fully
+    return sum + (revenue - cost - discountShare);
+  }, 0);
 
   const handleSave = () => {
     const invoice = {
@@ -192,7 +224,8 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
         )}
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
+
+            <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Payment Method</label>
             <select
               value={paymentMethod}
@@ -205,29 +238,152 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
               <option value="Bank Transfer">Bank Transfer</option>
             </select>
           </div>
+
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Sales Reference</label>
-            <input
+        <div className='flex cols-2 gap-4 mb-6'>
+              <input
               type="text"
               value={salesRef}
               onChange={(e) => setSalesRef(e.target.value)}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Sales person name"
             />
+               <button
+              
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+               REP
+            </button>
+        </div>
           </div>
+
+{/* Dynamic Payment Fields */}
+<div className="mb-6">
+  {paymentMethod === 'Credit' && (
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="text-xs">Credit Period (Days)</label>
+        <input
+          type="number"
+          value={creditDays}
+          onChange={(e) => setCreditDays(parseInt(e.target.value) || 0)}
+          className="w-full px-3 py-1.5 text-sm border rounded"
+        />
+      </div>
+
+      <div>
+        <label className="text-xs">Remarks</label>
+        <input
+          type="text"
+          value={creditRemarks}
+          onChange={(e) => setCreditRemarks(e.target.value)}
+          className="w-full px-3 py-1.5 text-sm border rounded"
+        />
+      </div>
+    </div>
+  )}
+
+  {paymentMethod === 'Cheque' && (
+    <div className="grid grid-cols-2 gap-4">
+      <input type="date" value={chequeDetails.date}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, date: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="Cheque No"
+        value={chequeDetails.chequeNo}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, chequeNo: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="From Bank"
+        value={chequeDetails.fromBank}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, fromBank: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="To Bank"
+        value={chequeDetails.toBank}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, toBank: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="Branch"
+        value={chequeDetails.branch}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, branch: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input type="number" placeholder="Amount"
+        value={chequeDetails.amount}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, amount: parseFloat(e.target.value) || 0 })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="Remark"
+        value={chequeDetails.remark}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, remark: e.target.value })}
+        className="col-span-2 px-3 py-1.5 border rounded text-sm"
+      />
+    </div>
+  )}
+
+  {paymentMethod === 'Bank Transfer' && (
+    <div className="grid grid-cols-2 gap-4">
+      <input placeholder="From Bank"
+        value={bankTransfer.fromBank}
+        onChange={(e) => setBankTransfer({ ...bankTransfer, fromBank: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="To Bank"
+        value={bankTransfer.toBank}
+        onChange={(e) => setBankTransfer({ ...bankTransfer, toBank: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input type="number" placeholder="Amount"
+        value={bankTransfer.amount}
+        onChange={(e) => setBankTransfer({ ...bankTransfer, amount: parseFloat(e.target.value) || 0 })}
+        className="px-3 py-1.5 border rounded text-sm"
+      />
+
+      <input placeholder="Remark"
+        value={bankTransfer.remark}
+        onChange={(e) => setBankTransfer({ ...bankTransfer, remark: e.target.value })}
+        className="px-3 py-1.5 border rounded text-sm col-span-2"
+      />
+    </div>
+  )}
+</div>
+
+
         </div>
 
         {/* Items Section */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <label className="text-xs font-medium text-gray-700">Items</label>
-            <button
+          <div className='flex gap-4 cols-2'>
+              <button
               onClick={() => setShowItemSearch(true)}
               className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-3 h-3" />
               Add Item
             </button>
+
+            <button
+            
+              className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              Add Description
+            </button>
+        </div>
+
           </div>
 
           {items.length > 0 && (
@@ -238,6 +394,7 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
                     <th className="px-3 py-2 text-left font-medium text-gray-700">Item</th>
                     <th className="px-3 py-2 text-left font-medium text-gray-700">Code</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Qty</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Cost</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Price</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Discount</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Total</th>
@@ -249,24 +406,29 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
                     <tr key={item.id} className="border-t border-gray-200">
                       <td className="px-3 py-2">{item.itemName}</td>
                       <td className="px-3 py-2">{item.itemCode}</td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="number"
-                          value={item.qty}
-                          onChange={(e) => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)}
-                          className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs"
-                          min="1"
-                        />
+                      <td className="px-3 py-2 align-middle">
+                        <div className="flex items-center justify-end">
+                          <input
+                            type="number"
+                            value={item.qty}
+                            onChange={(e) => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)}
+                            className="w-14 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
+                            min="1"
+                          />
+                        </div>
                       </td>
+                      <td className="px-3 py-2 text-right">{item.cost.toFixed(2)}</td>
                       <td className="px-3 py-2 text-right">{item.price.toFixed(2)}</td>
-                      <td className="px-3 py-2">
-                        <input
-                          type="number"
-                          value={item.discount}
-                          onChange={(e) => updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                          className="w-20 px-2 py-1 text-right border border-gray-300 rounded text-xs"
-                          min="0"
-                        />
+                      <td className="px-3 py-2 align-middle">
+                        <div className="flex items-center justify-end">
+                          <input
+                            type="number"
+                            value={item.discount}
+                            onChange={(e) => updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)}
+                            className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
+                            min="0"
+                          />
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-right font-medium">{item.total.toFixed(2)}</td>
                       <td className="px-3 py-2">
@@ -300,6 +462,10 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">Net Total:</span>
                 <span className="font-bold text-lg text-blue-600">Rs. {calculateNetTotal().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-gray-200">
+                <span className="font-semibold text-gray-900">Profit:</span>
+                <span className="font-bold text-lg text-green-600">Rs.  Rs. {calculateProfit().toFixed(2)}</span>
               </div>
             </div>
           </div>

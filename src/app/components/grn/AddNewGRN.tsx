@@ -21,9 +21,27 @@ interface GRNFormData {
   paymentMethod: string;
   discount: string;
   remarks: string;
-  customerPODate: string,
-  customerPONumber: string,
+  customerPODate: string;
+  customerPONumber: string;
   grnImage?: File | null;
+
+  paymentDetails: {
+    creditPeriod?: string;
+    creditRemark?: string;
+
+    chequeDate?: string;
+    chequeNumber?: string;
+    fromBank?: string;
+    toBank?: string;
+    branch?: string;
+    amount?: string;
+    chequeRemark?: string;
+
+    transferFromBank?: string;
+    transferToBank?: string;
+    transferAmount?: string;
+    transferRemark?: string;
+  };
 }
 
 interface AddNewGRNProps {
@@ -40,6 +58,7 @@ interface AddNewGRNProps {
   removeItem: (id: string) => void;
   
 }
+
 
 export function AddNewGRN({
   show,
@@ -178,6 +197,7 @@ export function AddNewGRN({
                   setFormData({
                     ...formData,
                     paymentMethod: e.target.value,
+                    paymentDetails: {} 
                   })
                 }
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
@@ -188,6 +208,214 @@ export function AddNewGRN({
                 <option value="Bank Transfer">Bank Transfer</option>
               </select>
             </div>
+
+
+{formData.paymentMethod === "Credit" && (
+  <div className="col-span-6 grid grid-cols-3 gap-4 mt-2">
+    
+    <input
+      type="number"
+      placeholder="Credit Period (days)"
+      value={formData.paymentDetails.creditPeriod || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            creditPeriod: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input
+      type="text"
+      placeholder="Remark"
+      value={formData.paymentDetails.creditRemark || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            creditRemark: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm col-span-2"
+    />
+  </div>
+)}
+
+{formData.paymentMethod === "Cheque" && (
+  <div className="col-span-6 grid grid-cols-3 gap-4 mt-2">
+
+    <input type="date" placeholder="Cheque Date"
+      value={formData.paymentDetails.chequeDate || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            chequeDate: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="Cheque Number"
+      value={formData.paymentDetails.chequeNumber || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            chequeNumber: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="From Bank"
+      value={formData.paymentDetails.fromBank || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            fromBank: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="To Bank"
+      value={formData.paymentDetails.toBank || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            toBank: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="Branch"
+      value={formData.paymentDetails.branch || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            branch: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="number" placeholder="Amount"
+      value={formData.paymentDetails.amount || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            amount: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="Remark"
+      value={formData.paymentDetails.chequeRemark || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            chequeRemark: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm col-span-3"
+    />
+
+  </div>
+)}
+
+
+{formData.paymentMethod === "Bank Transfer" && (
+  <div className="col-span-6 grid grid-cols-3 gap-4 mt-2">
+
+    <input type="text" placeholder="From Bank"
+      value={formData.paymentDetails.transferFromBank || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            transferFromBank: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="To Bank"
+      value={formData.paymentDetails.transferToBank || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            transferToBank: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="number" placeholder="Amount"
+      value={formData.paymentDetails.transferAmount || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            transferAmount: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm"
+    />
+
+    <input type="text" placeholder="Remark"
+      value={formData.paymentDetails.transferRemark || ""}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          paymentDetails: {
+            ...formData.paymentDetails,
+            transferRemark: e.target.value,
+          },
+        })
+      }
+      className="px-3 py-2 border rounded text-sm col-span-3"
+    />
+
+  </div>
+)}
+
+
+
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">

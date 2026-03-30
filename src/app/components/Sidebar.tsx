@@ -37,6 +37,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       children: [
         { id: 'invoice-new', label: 'New Invoice' },
         { id: 'invoice-all', label: 'View All' },
+        { id: 'invoice-reports', label: 'Reports' },
       ],
     },
     {
@@ -49,6 +50,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'customers-outstanding', label: 'Outstanding' },
         { id: 'customers-credit-note', label: 'Credit Note' },
         { id: 'customers-settlement', label: 'Settlement' },
+        { id: 'customers-reports', label: 'Reports' },
       ],
     },
     {
@@ -59,6 +61,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'stock-items', label: 'Items' },
         { id: 'stock-add', label: 'Add New' },
         { id: 'stock-categories', label: 'Categories' },
+        { id: 'stock-reports', label: 'Reports' },
       ],
     },
     {
@@ -67,6 +70,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <Truck className="w-4 h-4" />,
       children: [
         { id: 'suppliers-all', label: 'View All' },
+        { id: 'suppliers-settlements', label: 'Settlemets' },
         { id: 'suppliers-outstandings', label: 'Outstandings' },
       ],
     },
