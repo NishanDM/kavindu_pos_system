@@ -72,6 +72,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'suppliers-all', label: 'View All' },
         { id: 'suppliers-settlements', label: 'Settlemets' },
         { id: 'suppliers-outstandings', label: 'Outstandings' },
+        { id: 'suppliers-reports', label: 'Reports' },
       ],
     },
     {
@@ -80,8 +81,8 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <DollarSign className="w-4 h-4" />,
       children: [
         { id: 'accounts-dashboard', label: 'Dashboard' },
-        { id: 'accounts-reports', label: 'Reports' },
         { id: 'accounts-expenses', label: 'Expenses' },
+        { id: 'accounts-reports', label: 'Reports' },
       ],
     },
     {
@@ -92,6 +93,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'po-all', label: 'All PO' },
         { id: 'grn-all', label: 'All GRN' },
         { id: 'grn-settlement', label: 'Settlement' },
+        { id: 'grn-reports', label: 'Reports' },
       ],
     },
     {
@@ -100,6 +102,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <FileCheck className="w-4 h-4" />,
       children: [
         { id: 'quotation-all', label: 'View All' },
+        { id: 'quotation-reports', label: 'Reports' },
       ],
     },
   ];

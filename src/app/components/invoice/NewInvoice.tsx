@@ -17,6 +17,7 @@ interface Customer {
   name: string;
   phone: string;
   address: string;
+  outstandings: number;
 }
 
 interface NewInvoiceProps {
@@ -34,6 +35,9 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [descriptionText, setDescriptionText] = useState('');
+  const [descriptionAmount, setDescriptionAmount] = useState<number>(0);
 
   // Credit
 const [creditDays, setCreditDays] = useState<number>(0);
@@ -60,10 +64,10 @@ const [bankTransfer, setBankTransfer] = useState({
 
   // Mock customers
   const mockCustomers: Customer[] = [
-    { id: 'CUST-001', name: 'John Auto Parts', phone: '+94771234567', address: '123 Main St, Colombo 03' },
-    { id: 'CUST-002', name: 'Lanka Motors', phone: '+94779876543', address: '456 Galle Rd, Mount Lavinia' },
-    { id: 'CUST-003', name: 'Royal Bike Shop', phone: '+94112223344', address: '789 Kandy Rd, Kadawatha' },
-    { id: 'CUST-004', name: 'Speed Auto Center', phone: '+94777778888', address: '321 Negombo Rd, Wattala' },
+    { id: 'CUST-001', name: 'John Auto Parts', phone: '+94771234567', address: '123 Main St, Colombo 03', outstandings: 1200 },
+    { id: 'CUST-002', name: 'Lanka Motors', phone: '+94779876543', address: '456 Galle Rd, Mount Lavinia', outstandings: 2200  },
+    { id: 'CUST-003', name: 'Royal Bike Shop', phone: '+94112223344', address: '789 Kandy Rd, Kadawatha', outstandings: 3200  },
+    { id: 'CUST-004', name: 'Speed Auto Center', phone: '+94777778888', address: '321 Negombo Rd, Wattala' , outstandings: 4200 },
   ];
 
   // Mock items for search
@@ -97,6 +101,28 @@ const [bankTransfer, setBankTransfer] = useState({
     setShowItemSearch(false);
     setSearchQuery('');
   };
+
+  const addDescriptionItem = () => {
+  if (!descriptionText || descriptionAmount <= 0) return;
+
+  const newItem: InvoiceItem = {
+    id: Date.now().toString(),
+    itemName: descriptionText,
+    itemCode: '-', // no code
+    qty: 1,
+    cost: 0, // no cost tracking
+    price: descriptionAmount,
+    discount: 0,
+    total: descriptionAmount,
+  };
+
+  setItems([...items, newItem]);
+
+  // reset + close
+  setDescriptionText('');
+  setDescriptionAmount(0);
+  setShowDescriptionModal(false);
+};
 
   const updateItem = (id: string, field: keyof InvoiceItem, value: number) => {
     setItems(items.map(item => {
@@ -376,11 +402,11 @@ const [bankTransfer, setBankTransfer] = useState({
             </button>
 
             <button
-            
+            onClick={() => setShowDescriptionModal(true)}
               className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
             >
               <Plus className="w-3 h-3" />
-              Add Description
+              Add Cost
             </button>
         </div>
 
@@ -402,45 +428,75 @@ const [bankTransfer, setBankTransfer] = useState({
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id} className="border-t border-gray-200">
-                      <td className="px-3 py-2">{item.itemName}</td>
-                      <td className="px-3 py-2">{item.itemCode}</td>
-                      <td className="px-3 py-2 align-middle">
-                        <div className="flex items-center justify-end">
-                          <input
-                            type="number"
-                            value={item.qty}
-                            onChange={(e) => updateItem(item.id, 'qty', parseInt(e.target.value) || 0)}
-                            className="w-14 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
-                            min="1"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right">{item.cost.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right">{item.price.toFixed(2)}</td>
-                      <td className="px-3 py-2 align-middle">
-                        <div className="flex items-center justify-end">
-                          <input
-                            type="number"
-                            value={item.discount}
-                            onChange={(e) => updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)}
-                            className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
-                            min="0"
-                          />
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-right font-medium">{item.total.toFixed(2)}</td>
-                      <td className="px-3 py-2">
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {items.map((item) => {
+                    const isDescription = item.itemCode === '-';
+
+                    return (
+                      <tr key={item.id} className="border-t border-gray-200">
+                        <td className="px-3 py-2">
+                          {isDescription ? (
+                            <span className="italic text-gray-600">{item.itemName}</span>
+                          ) : (
+                            item.itemName
+                          )}
+                        </td>
+
+                        <td className="px-3 py-2">
+                          {isDescription ? '-' : item.itemCode}
+                        </td>
+
+                        <td className="px-3 py-2 align-middle">
+                          <div className="flex items-center justify-end">
+                            <input
+                              type="number"
+                              value={item.qty}
+                              disabled={isDescription}
+                              onChange={(e) =>
+                                updateItem(item.id, 'qty', parseInt(e.target.value) || 0)
+                              }
+                              className="w-14 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
+                              min="1"
+                            />
+                          </div>
+                        </td>
+
+                        <td className="px-3 py-2 text-right">
+                          {isDescription ? '-' : item.cost.toFixed(2)}
+                        </td>
+
+                        <td className="px-3 py-2 text-right">
+                          {item.price.toFixed(2)}
+                        </td>
+
+                        <td className="px-3 py-2 align-middle">
+                          <div className="flex items-center justify-end">
+                            <input
+                              type="number"
+                              value={item.discount}
+                              onChange={(e) =>
+                                updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)
+                              }
+                              className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
+                              min="0"
+                            />
+                          </div>
+                        </td>
+
+                        <td className="px-3 py-2 text-right font-medium">
+                          {item.total.toFixed(2)}
+                        </td>
+
+                        <td className="px-3 py-2">
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -524,6 +580,7 @@ const [bankTransfer, setBankTransfer] = useState({
                       <p className="text-sm font-medium text-gray-900">{customer.name}</p>
                       <p className="text-xs text-gray-600 mt-0.5">{customer.phone}</p>
                       <p className="text-xs text-gray-500 mt-1">{customer.address}</p>
+                      <p className="text-xs text-gray-500 mt-1"> Outstandings : Rs. {customer.outstandings}</p>
                     </div>
                     <span className="text-xs text-blue-600 font-medium">{customer.id}</span>
                   </div>
@@ -533,6 +590,61 @@ const [bankTransfer, setBankTransfer] = useState({
           </div>
         </div>
       )}
+
+
+{showDescriptionModal && (
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[120]">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-5 mx-4">
+      
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Add Description
+        </h3>
+        <button
+          onClick={() => setShowDescriptionModal(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        {/* Description */}
+        <div>
+          <label className="text-xs text-gray-600">Description</label>
+          <input
+            type="text"
+            value={descriptionText}
+            onChange={(e) => setDescriptionText(e.target.value)}
+            className="w-full px-3 py-2 text-sm border rounded"
+            placeholder="e.g. Transport cost"
+          />
+        </div>
+
+        {/* Amount */}
+        <div>
+          <label className="text-xs text-gray-600">Amount</label>
+          <input
+            type="number"
+            value={descriptionAmount}
+            onChange={(e) => setDescriptionAmount(parseFloat(e.target.value) || 0)}
+            className="w-full px-3 py-2 text-sm border rounded"
+            placeholder="Enter amount"
+          />
+        </div>
+
+        {/* Add Button */}
+        <button
+          onClick={addDescriptionItem}
+          className="w-full bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700"
+        >
+          Add to Invoice
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
 
       {/* Item Search Modal */}
       {showItemSearch && (
