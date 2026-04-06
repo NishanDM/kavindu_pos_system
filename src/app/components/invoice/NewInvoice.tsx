@@ -20,6 +20,9 @@ interface Customer {
   phone: string;
   address: string;
   outstandings: number;
+  creditLimit:number;
+  lastPendingInvoiceNumber: string;
+  lastPendingInvoiceDate: string;
 }
 
 interface NewInvoiceProps {
@@ -40,10 +43,10 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [descriptionText, setDescriptionText] = useState('');
   const [descriptionAmount, setDescriptionAmount] = useState<number>(0);
-
-  // Credit
-const [creditDays, setCreditDays] = useState<number>(0);
-const [creditRemarks, setCreditRemarks] = useState('');
+  const [creditDays, setCreditDays] = useState<number>(0);
+  const [creditRemarks, setCreditRemarks] = useState('');
+  const [showManualDiscountModal, setShowManualDiscountModal] = useState(false);
+  const [manualDiscountValue, setManualDiscountValue] = useState<number>(0);
 
 // Cheque
 const [chequeDetails, setChequeDetails] = useState({
@@ -66,10 +69,10 @@ const [bankTransfer, setBankTransfer] = useState({
 
   // Mock customers
   const mockCustomers: Customer[] = [
-    { id: 'CUST-001', name: 'John Auto Parts', phone: '+94771234567', address: '123 Main St, Colombo 03', outstandings: 1200 },
-    { id: 'CUST-002', name: 'Lanka Motors', phone: '+94779876543', address: '456 Galle Rd, Mount Lavinia', outstandings: 2200  },
-    { id: 'CUST-003', name: 'Royal Bike Shop', phone: '+94112223344', address: '789 Kandy Rd, Kadawatha', outstandings: 3200  },
-    { id: 'CUST-004', name: 'Speed Auto Center', phone: '+94777778888', address: '321 Negombo Rd, Wattala' , outstandings: 4200 },
+    { id: 'CUST-001', name: 'John Auto Parts', phone: '+94771234567', address: '123 Main St, Colombo 03', outstandings: 1200, creditLimit: 200000 , lastPendingInvoiceNumber: 'INV1278', lastPendingInvoiceDate:'08.12.2025'},
+    { id: 'CUST-002', name: 'Lanka Motors', phone: '+94779876543', address: '456 Galle Rd, Mount Lavinia', outstandings: 2200, creditLimit: 180000 , lastPendingInvoiceNumber: 'INV1280',  lastPendingInvoiceDate: '10.12.2025' },
+    { id: 'CUST-003', name: 'Royal Bike Shop', phone: '+94112223344', address: '789 Kandy Rd, Kadawatha', outstandings: 3200, creditLimit: 350000 , lastPendingInvoiceNumber: 'INV1285',  lastPendingInvoiceDate: '12.12.2025' },
+    { id: 'CUST-004', name: 'Speed Auto Center', phone: '+94777778888', address: '321 Negombo Rd, Wattala' , outstandings: 4200, creditLimit: 180000 , lastPendingInvoiceNumber: 'INV1290',   lastPendingInvoiceDate: '15.12.2025'},
   ];
 
   // Mock items for search
@@ -116,6 +119,7 @@ const [bankTransfer, setBankTransfer] = useState({
     cost: 0, // no cost tracking
     price: descriptionAmount,
     discount: 0,
+    discountType: 'manual',
     total: descriptionAmount,
   };
 
@@ -159,7 +163,23 @@ const updateItem = (
   };
 
   const calculateSubTotal = () => items.reduce((sum, item) => sum + (item.qty * item.price), 0);
-  const calculateTotalDiscount = () => items.reduce((sum, item) => sum + item.discount, 0);
+  const calculateItemDiscount = () =>
+  items.reduce((sum, item) => {
+    const subTotal = item.qty * item.price;
+
+    let discountAmount = 0;
+
+    if (item.discountType === 'percentage') {
+      discountAmount = (subTotal * item.discount) / 100;
+    } else {
+      discountAmount = item.discount;
+    }
+
+    return sum + discountAmount;
+  }, 0);
+
+const calculateTotalDiscount = () =>
+  calculateItemDiscount() + manualDiscountValue;
   const calculateNetTotal = () => calculateSubTotal() - calculateTotalDiscount();
   const calculateProfit = () =>
   items.reduce((sum, item) => {
@@ -168,6 +188,27 @@ const updateItem = (
     const discountShare = item.discount; // assumes discount reduces profit fully
     return sum + (revenue - cost - discountShare);
   }, 0);
+
+
+  const handleExtraAction = (value: string) => {
+  switch (value) {
+    case 'manual-discount':
+      setShowManualDiscountModal(true);
+      break;
+
+    case 'expenses':
+      setShowDescriptionModal(true);
+      break;
+
+    case 'overhead':
+      console.log('Overhead clicked');
+      // TODO: implement overhead logic
+      break;
+
+    default:
+      break;
+  }
+};
 
   const handleSave = () => {
     const invoice = {
@@ -228,8 +269,7 @@ const updateItem = (
               {selectedCustomer ? (
                 <div className="flex-1 px-3 py-1.5 text-sm border border-green-300 bg-green-50 rounded flex justify-between items-center">
                   <div>
-                    <p className="font-medium text-gray-900">{selectedCustomer.name}</p>
-                    <p className="text-xs text-gray-600">{selectedCustomer.phone}</p>
+                    <p className="font-medium text-gray-900">{selectedCustomer.name} - ({selectedCustomer.phone})</p>
                   </div>
                   <button
                     onClick={() => {
@@ -313,7 +353,7 @@ const updateItem = (
         <input
           type="number"
           value={creditDays}
-          onChange={(e) => setCreditDays(parseInt(e.target.value) || 0)}
+          onChange={(e) => setCreditDays(parseInt(e.target.value))}
           className="w-full px-3 py-1.5 text-sm border rounded"
         />
       </div>
@@ -363,7 +403,7 @@ const updateItem = (
 
       <input type="number" placeholder="Amount"
         value={chequeDetails.amount}
-        onChange={(e) => setChequeDetails({ ...chequeDetails, amount: parseFloat(e.target.value) || 0 })}
+        onChange={(e) => setChequeDetails({ ...chequeDetails, amount: parseFloat(e.target.value) })}
         className="px-3 py-1.5 border rounded text-sm"
       />
 
@@ -391,7 +431,7 @@ const updateItem = (
 
       <input type="number" placeholder="Amount"
         value={bankTransfer.amount}
-        onChange={(e) => setBankTransfer({ ...bankTransfer, amount: parseFloat(e.target.value) || 0 })}
+        onChange={(e) => setBankTransfer({ ...bankTransfer, amount: parseFloat(e.target.value)  })}
         className="px-3 py-1.5 border rounded text-sm"
       />
 
@@ -420,13 +460,24 @@ const updateItem = (
               Add Item
             </button>
 
-            <button
-            onClick={() => setShowDescriptionModal(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
-            >
-              <Plus className="w-3 h-3" />
-              Add Cost
-            </button>
+            <div className="relative">
+              <select
+                onChange={(e) => {
+                  handleExtraAction(e.target.value);
+                  e.target.selectedIndex = 0;
+                }}
+                className="appearance-none flex items-center gap-1 px-3 py-1.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 cursor-pointer pr-8"
+              >
+                <option value="">More</option>
+                <option value="manual-discount">Manual Discount</option>
+                <option value="expenses">Add Expenses</option>
+                <option value="overhead">Overhead</option>
+              </select>
+
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-xs">
+                ▼
+              </span>
+            </div>
         </div>
 
           </div>
@@ -507,7 +558,7 @@ const updateItem = (
                             type="number"
                             value={item.discount}
                             onChange={(e) =>
-                              updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)
+                              updateItem(item.id, 'discount', parseFloat(e.target.value) )
                             }
                             className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs"
                             min="0"
@@ -543,6 +594,18 @@ const updateItem = (
               <div className="flex justify-between">
                 <span className="text-gray-600">Sub Total:</span>
                 <span className="font-medium">Rs. {calculateSubTotal().toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Manual Discount:</span>
+                <span className="font-medium text-red-600">
+                  - Rs. {manualDiscountValue.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Item Discount:</span>
+                <span className="font-medium text-red-600">
+                  - Rs. {calculateItemDiscount().toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Total Discount:</span>
@@ -613,7 +676,9 @@ const updateItem = (
                       <p className="text-sm font-medium text-gray-900">{customer.name}</p>
                       <p className="text-xs text-gray-600 mt-0.5">{customer.phone}</p>
                       <p className="text-xs text-gray-500 mt-1">{customer.address}</p>
-                      <p className="text-xs text-gray-500 mt-1"> Outstandings : Rs. {customer.outstandings}</p>
+                      <p className="text-xs text-orange-400 mt-1"> Outstandings : Rs. {customer.outstandings}</p>
+                      <p className="text-xs text-red-500 mt-1"> Credit Limit : Rs. {customer.creditLimit}</p>
+                      <p className="text-xs text-cyan-700 mt-1"> Last Pending Bill Number: {customer.lastPendingInvoiceNumber} - Date: {customer.lastPendingInvoiceDate}</p>
                     </div>
                     <span className="text-xs text-blue-600 font-medium">{customer.id}</span>
                   </div>
@@ -693,6 +758,7 @@ onSelect={(products) => {
     cost: product.costPrice,
     price: product.sellingPrice,
     discount: 0,
+    discountType: 'manual',
     total: product.sellingPrice,
   }));
 
@@ -709,6 +775,7 @@ onSelect={(products) => {
       cost: product.costPrice,
       price: product.sellingPrice,
       discount: 0,
+      discountType: 'manual',
       total: product.sellingPrice,
     }));
 
@@ -717,6 +784,48 @@ onSelect={(products) => {
   setShowItemSearch(false);
 }}
   />
+)}
+
+{showManualDiscountModal && (
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[130]">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-5 mx-4">
+      
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Add Manual Discount
+        </h3>
+        <button
+          onClick={() => setShowManualDiscountModal(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs text-gray-600">Discount Amount</label>
+          <input
+            type="number"
+            value={manualDiscountValue}
+            onChange={(e) =>
+              setManualDiscountValue(parseFloat(e.target.value) || 0)
+            }
+            className="w-full px-3 py-2 text-sm border rounded"
+            placeholder="Enter discount"
+          />
+        </div>
+
+        <button
+          onClick={() => setShowManualDiscountModal(false)}
+          className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700"
+        >
+          Apply Discount
+        </button>
+      </div>
+
+    </div>
+  </div>
 )}
     </div>
   );
