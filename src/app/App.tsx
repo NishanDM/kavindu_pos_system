@@ -4,19 +4,46 @@ import { Login } from './components/Login';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { NotificationPanel } from './components/NotificationPanel';
+
 import { NewInvoice } from './components/invoice/NewInvoice';
 import { ViewAllInvoices } from './components/invoice/ViewAllInvoices';
+import { InvoiceReports } from './components/invoice/InvoiceReports';
+
+
 import { StockItems } from './components/stock/StockItems';
 import { AddItem } from './components/stock/AddItem';
+import { StockReports } from './components/stock/StockReports';
+
+
 import { CustomerManagement } from './components/customers/CustomerManagement';
+import { CustomerOutstandings}  from './components/customers/CustomerOutstandings';
+import {CustomerCreditNotes}  from './components/customers/CustomerCreditNotes';
+import { CustomerSettlements } from './components/customers/CustomerSettlements';
+import { CustomerReports } from './components/customers/CustomerReports';
+
+
 import { SupplierManagement } from './components/suppliers/SupplierManagement';
 import { SupplierOutstandings } from './components/suppliers/SupplierOutstandings';
+import {SupplierSettlements} from './components/suppliers/SupplierSettlements';
+import {SupplierReports} from './components/suppliers/SupplierReports';
+
+
 import { GRNManagement } from './components/grn/GRNManagement';
+import { GRNSettlement } from './components/grn/GRNSettlement';
+import {GrnReports} from './components/grn/GrnReports';
 import { PurchaseOrderManagement } from './components/po/PurchaseOrderManagement';
+
+
 import { QuotationManagement } from './components/quotation/QuotationManagement';
+import { QuotationReports } from './components/quotation/QuotationReports';
+
+
 import { AccountsDashboard } from './components/accounts/AccountsDashboard';
 import { ExpenseManagement } from './components/accounts/ExpenseManagement';
-import { GRNSettlement } from './components/grn/GRNSettlement';
+import { AccountsReprts } from './components/accounts/AccountsReports';
+
+
+
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -172,10 +199,8 @@ export default function App() {
   const renderContent = () => {
     switch (activeSection) {
       // Invoice sections
-      case 'invoice-new':
-        return <NewInvoice onSave={handleSaveInvoice} />;
+      case 'invoice-new':   return <NewInvoice onSave={handleSaveInvoice} />;
       case 'invoice-all':
-      case 'invoice-pending':
         return (
           <ViewAllInvoices
             invoices={invoices}
@@ -183,6 +208,7 @@ export default function App() {
             onDelete={handleDeleteInvoice}
           />
         );
+      case 'invoice-reports': return <InvoiceReports />
 
       // Stock sections
       case 'stock-items':
@@ -194,8 +220,8 @@ export default function App() {
             onDelete={handleDeleteItem}
           />
         );
-      case 'stock-add':
-        return <AddItem onSave={handleSaveItem} />;
+      case 'stock-add':   return <AddItem onSave={handleSaveItem} />;
+      case 'stock-reports': return <StockReports/>;
       case 'stock-categories':
         return (
           <div className="p-6">
@@ -215,39 +241,44 @@ export default function App() {
 
       // Customer section
       case 'customers-new':
-      case 'customers-all':
-        return <CustomerManagement />;
+      case 'customers-all':  return <CustomerManagement />;
+      case 'customers-outstanding': return < CustomerOutstandings/>
+      case 'customers-credit-note':  return < CustomerCreditNotes/>
+      case 'customers-settlement':  return < CustomerSettlements/>
+      case 'customers-reports':  return < CustomerReports/>
+
+  
 
       // Supplier section
       case 'suppliers-new':
-      case 'suppliers-all':
-        return <SupplierManagement />;
-      case 'suppliers-outstandings':
-        return <SupplierOutstandings />;
+      case 'suppliers-all':  return <SupplierManagement />;
+      case 'suppliers-settlements': return <SupplierSettlements/>
+      case 'suppliers-outstandings':  return <SupplierOutstandings />;
+      case 'suppliers-reports': return <SupplierReports/> ;
+      
 
       // Accounts sections
-      case 'accounts-dashboard':
-      case 'accounts-reports':
-        return <AccountsDashboard />;
-      case 'accounts-expenses':
-        return <ExpenseManagement />;
+      case 'accounts-dashboard':  return <AccountsDashboard />;
+      case 'accounts-expenses':     return <ExpenseManagement />;
+      case 'accounts-reports':  return <AccountsReprts/>
+    
 
       // PO & GRN sections
       case 'po-new':
-      case 'po-all':
-        return <PurchaseOrderManagement />;
-      case 'grn-settlement':
-        return <GRNSettlement/>
-      case 'grn-all':
-        return <GRNManagement />;
+      case 'po-all':   return <PurchaseOrderManagement />;
+      case 'grn-settlement':   return <GRNSettlement/>
+      case 'grn-all':   return <GRNManagement />;
+      case 'grn-reports': return <GrnReports/> ;
+      
 
       // Quotation sections
       case 'quotation-new':
-      case 'quotation-all':
-        return <QuotationManagement />;
+      case 'quotation-all':   return <QuotationManagement />;
+      case 'quotation-reports':  return <QuotationReports />;
+      
 
-      default:
-        return <AccountsDashboard />;
+      default:  return <AccountsDashboard />;
+      
     }
   };
 
