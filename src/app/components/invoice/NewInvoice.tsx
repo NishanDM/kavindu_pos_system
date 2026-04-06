@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Trash2, Search, X } from 'lucide-react';
+import { ItemsForNewInvoice } from './ItemsForNewInvoice';
 
 interface InvoiceItem {
   id: string;
@@ -9,6 +10,7 @@ interface InvoiceItem {
   cost: number;
   price: number;
   discount: number;
+  discountType: 'manual' | 'percentage';
   total: number;
 }
 
@@ -95,6 +97,7 @@ const [bankTransfer, setBankTransfer] = useState({
       cost: item.cost,
       price: item.price,
       discount: 0,
+      discountType: 'manual',
       total: item.price,
     };
     setItems([...items, newItem]);
@@ -124,16 +127,32 @@ const [bankTransfer, setBankTransfer] = useState({
   setShowDescriptionModal(false);
 };
 
-  const updateItem = (id: string, field: keyof InvoiceItem, value: number) => {
-    setItems(items.map(item => {
-      if (item.id === id) {
-        const updated = { ...item, [field]: value };
-        updated.total = (updated.qty * updated.price) - updated.discount;
-        return updated;
+const updateItem = (
+  id: string,
+  field: keyof InvoiceItem,
+  value: number | string
+) => {
+  setItems(items.map(item => {
+    if (item.id === id) {
+      const updated = { ...item, [field]: value };
+
+      const subTotal = updated.qty * updated.price;
+
+      let discountAmount = 0;
+
+      if (updated.discountType === 'percentage') {
+        discountAmount = (subTotal * Number(updated.discount)) / 100;
+      } else {
+        discountAmount = Number(updated.discount);
       }
-      return item;
-    }));
-  };
+
+      updated.total = subTotal - discountAmount;
+
+      return updated;
+    }
+    return item;
+  }));
+};
 
   const removeItem = (id: string) => {
     setItems(items.filter(item => item.id !== id));
@@ -422,6 +441,7 @@ const [bankTransfer, setBankTransfer] = useState({
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Qty</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Cost</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Price</th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Dis: Type</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Discount</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Total</th>
                     <th className="px-3 py-2"></th>
@@ -468,17 +488,30 @@ const [bankTransfer, setBankTransfer] = useState({
                           {item.price.toFixed(2)}
                         </td>
 
+                      <td className="px-3 py-2 text-right">
+                        <select
+                          value={item.discountType}
+                          onChange={(e) =>
+                            updateItem(item.id, 'discountType', e.target.value)
+                          }
+                          className="border border-gray-300 rounded text-xs px-1 py-1"
+                        >
+                          <option value="manual">Manual</option>
+                          <option value="percentage">%</option>
+                        </select>
+                      </td>
+
                         <td className="px-3 py-2 align-middle">
                           <div className="flex items-center justify-end">
-                            <input
-                              type="number"
-                              value={item.discount}
-                              onChange={(e) =>
-                                updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)
-                              }
-                              className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs leading-none"
-                              min="0"
-                            />
+                          <input
+                            type="number"
+                            value={item.discount}
+                            onChange={(e) =>
+                              updateItem(item.id, 'discount', parseFloat(e.target.value) || 0)
+                            }
+                            className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs"
+                            min="0"
+                          />
                           </div>
                         </td>
 
@@ -521,7 +554,7 @@ const [bankTransfer, setBankTransfer] = useState({
               </div>
               <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">Profit:</span>
-                <span className="font-bold text-lg text-green-600">Rs.  Rs. {calculateProfit().toFixed(2)}</span>
+                <span className="font-bold text-lg text-green-600">Rs. {calculateProfit().toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -647,54 +680,44 @@ const [bankTransfer, setBankTransfer] = useState({
 )}
 
       {/* Item Search Modal */}
-      {showItemSearch && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-sm font-semibold text-gray-900">Search Item</h3>
-              <button
-                onClick={() => setShowItemSearch(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Search by item name or code..."
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              {filteredItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => addItem(item)}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                      <p className="text-xs text-gray-600">Code: {item.code}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-blue-600">Rs. {item.price}</p>
-                      <p className="text-xs text-gray-600">Stock: {item.stock}</p>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+{showItemSearch && (
+  <ItemsForNewInvoice
+    show={showItemSearch}
+    onClose={() => setShowItemSearch(false)}
+onSelect={(products) => {
+  const newItems: InvoiceItem[] = products.map((product) => ({
+    id: Date.now().toString() + product.id,
+    itemName: product.name,
+    itemCode: product.code,
+    qty: 1,
+    cost: product.costPrice,
+    price: product.sellingPrice,
+    discount: 0,
+    total: product.sellingPrice,
+  }));
+
+  setItems((prev) => {
+  const existingCodes = new Set(prev.map((i) => i.itemCode));
+
+  const newItems = products
+    .filter((p) => !existingCodes.has(p.code))
+    .map((product) => ({
+      id: Date.now().toString() + product.id,
+      itemName: product.name,
+      itemCode: product.code,
+      qty: 1,
+      cost: product.costPrice,
+      price: product.sellingPrice,
+      discount: 0,
+      total: product.sellingPrice,
+    }));
+
+  return [...prev, ...newItems];
+});
+  setShowItemSearch(false);
+}}
+  />
+)}
     </div>
   );
 }
