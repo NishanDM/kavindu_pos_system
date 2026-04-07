@@ -51,6 +51,9 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
   const [showManualDiscountModal, setShowManualDiscountModal] = useState(false);
   const [manualDiscountValue, setManualDiscountValue] = useState<number>(0);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showOverheadModal, setShowOverheadModal] = useState(false);
+  const [overheadName, setOverheadName] = useState('');
+  const [overheadAmount, setOverheadAmount] = useState<number>(0);
 
 // Cheque
 const [chequeDetails, setChequeDetails] = useState({
@@ -250,13 +253,36 @@ const calculateNetTotal = () => {
       break;
 
     case 'overhead':
-      console.log('Overhead clicked');
-      // TODO: implement overhead logic
+      setShowOverheadModal(true);
       break;
 
     default:
       break;
   }
+};
+
+
+const addOverheadItem = () => {
+  if (!overheadName || overheadAmount <= 0) return;
+
+  const newItem: InvoiceItem = {
+    id: Date.now().toString(),
+    itemName: `Over Head - ${overheadName}`,
+    itemCode: '-', 
+    qty: 1,
+    cost: 0,
+    price: overheadAmount,
+    discount: 0,
+    discountType: 'manual',
+    total: overheadAmount,
+    discountEnabled: false, // usually overhead shouldn't be discounted
+  };
+
+  setItems(prev => [...prev, newItem]);
+
+  setOverheadName('');
+  setOverheadAmount(0);
+  setShowOverheadModal(false);
 };
 
   const handleSave = () => {
@@ -545,15 +571,20 @@ const calculateNetTotal = () => {
                 <tbody>
                   {items.map((item) => {
                     const isDescription = item.itemCode === '-';
+                    const isOverhead = item.itemName.startsWith('Over Head -');
 
                     return (
                      <tr  key={item.id} className={`border-t border-gray-200 ${  openMenuId === item.id ? 'bg-gray-100' : '' }`}>
                         <td className="px-3 py-2">
-                          {isDescription ? (
-                            <span className="italic text-gray-600">{item.itemName}</span>
-                          ) : (
-                            item.itemName
-                          )}
+                        {isDescription ? (
+                          <span className="italic text-gray-600">{item.itemName}</span>
+                        ) : isOverhead ? (
+                          <span className="italic text-amber-600 font-medium">
+                            {item.itemName}
+                          </span>
+                        ) : (
+                          item.itemName
+                        )}
                         </td>
 
                         <td className="px-3 py-2">
@@ -939,6 +970,73 @@ setItems((prev) => {
 
   </div>
 </div>
+)}
+{/* ===================    OVERHEAD POPUP  ============== */}
+
+{showOverheadModal && (
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[140]">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-5 mx-4">
+
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Add Overhead
+        </h3>
+        <button
+          onClick={() => setShowOverheadModal(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="space-y-4">
+
+        {/* Name */}
+        <div>
+          <label className="text-xs text-gray-600">Overhead Name</label>
+          <input
+            type="text"
+            value={overheadName}
+            onChange={(e) => setOverheadName(e.target.value)}
+            className="w-full px-3 py-2 text-sm border rounded"
+            placeholder="e.g. Transport / Fuel / Handling"
+          />
+        </div>
+
+        {/* Amount */}
+        <div>
+          <label className="text-xs text-gray-600">Amount</label>
+          <input
+            type="number"
+            value={overheadAmount}
+            onChange={(e) =>
+              setOverheadAmount(parseFloat(e.target.value) || 0)
+            }
+            className="w-full px-3 py-2 text-sm border rounded"
+            placeholder="Enter amount"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-3 pt-2">
+          <button
+            onClick={() => setShowOverheadModal(false)}
+            className="flex-1 border border-gray-300 text-gray-700 py-2 rounded text-sm hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            onClick={addOverheadItem}
+            className="flex-1 bg-amber-600 text-white py-2 rounded text-sm hover:bg-amber-700"
+          >
+            Add Overhead
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 )}
     </div>
   );
