@@ -177,7 +177,8 @@ const updateItem = (
 
   //  =========================================================================
 const handleManualDiscountChange = (value: number) => {
-  setManualDiscountValue(Math.min(Math.max(value, 0), 100));
+  const cap = calculateDiscountAcceptableAmount();
+  setManualDiscountValue(Math.min(value, cap));
 };
 
 
@@ -207,10 +208,8 @@ const calculateDiscountAcceptableAmount = () =>
 
 // 5. Manual Discount (capped safely)
 const calculateManualDiscount = () => {
-  const base = calculateDiscountAcceptableAmount();
-  const discount = (base * manualDiscountValue) / 100;
-
-  return Math.min(discount, base); // safety cap
+  const cap = calculateDiscountAcceptableAmount();
+  return Math.min(manualDiscountValue, cap);
 };
 
 
@@ -686,12 +685,12 @@ const calculateNetTotal = () => {
                 Rs. {calculateDiscountAcceptableAmount().toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Manual Discount:</span>
-              <span className="font-medium text-red-600">
-                - {manualDiscountValue.toFixed(2)}% (Rs. {calculateManualDiscount().toFixed(2)})
-              </span>
-            </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Manual Discount:</span>
+                <span className="font-medium text-red-600">
+                  - Rs. {manualDiscountValue.toFixed(2)}
+                </span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Item Discount:</span>
                 <span className="font-medium text-red-600">
@@ -880,65 +879,43 @@ setItems((prev) => {
 )}
 
 {showManualDiscountModal && (
-<div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[130]">
-  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[130]">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-5 mx-4">
+      
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Add Manual Discount
+        </h3>
+        <button
+          onClick={() => setShowManualDiscountModal(false)}
+          className="text-gray-400 hover:text-gray-600"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-    {/* Header */}
-    <div className="flex items-center justify-between mb-6">
-      <h3 className="text-lg font-semibold text-gray-900">
-        Add Manual Discount
-      </h3>
-      <button
-        onClick={() => setShowManualDiscountModal(false)}
-        className="text-gray-400 hover:text-gray-600 transition"
-      >
-        <X className="w-5 h-5" />
-      </button>
-    </div>
-
-    {/* Content */}
-    <div className="space-y-5">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Discount Percentage
-        </label>
-
-        <div className="relative">
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs text-gray-600">Discount Amount</label>
           <input
             type="number"
             value={manualDiscountValue}
             onChange={(e) =>
               handleManualDiscountChange(parseFloat(e.target.value) || 0)
             }
-            placeholder="Enter discount"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-            %
-          </span>
         </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={() => setShowManualDiscountModal(false)}
-          className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm hover:bg-gray-50 transition"
-        >
-          Cancel
-        </button>
 
         <button
           onClick={() => setShowManualDiscountModal(false)}
-          className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm hover:bg-blue-700 transition shadow-sm"
+          className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700"
         >
           Apply Discount
         </button>
       </div>
-    </div>
 
+    </div>
   </div>
-</div>
 )}
     </div>
   );
