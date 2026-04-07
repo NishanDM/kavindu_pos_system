@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { Plus, Trash2, Search, X } from 'lucide-react';
 import { ItemsForNewInvoice } from './ItemsForNewInvoice';
+import { DropdownMenu } from "../common_use_components/DropdownMenu";
 
 interface InvoiceItem {
   id: string;
@@ -12,6 +14,7 @@ interface InvoiceItem {
   discount: number;
   discountType: 'manual' | 'percentage';
   total: number;
+  discountEnabled: boolean;
 }
 
 interface Customer {
@@ -47,6 +50,7 @@ export function NewInvoice({ onSave }: NewInvoiceProps) {
   const [creditRemarks, setCreditRemarks] = useState('');
   const [showManualDiscountModal, setShowManualDiscountModal] = useState(false);
   const [manualDiscountValue, setManualDiscountValue] = useState<number>(0);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
 // Cheque
 const [chequeDetails, setChequeDetails] = useState({
@@ -102,6 +106,7 @@ const [bankTransfer, setBankTransfer] = useState({
       discount: 0,
       discountType: 'manual',
       total: item.price,
+       discountEnabled: true,
     };
     setItems([...items, newItem]);
     setShowItemSearch(false);
@@ -121,6 +126,7 @@ const [bankTransfer, setBankTransfer] = useState({
     discount: 0,
     discountType: 'manual',
     total: descriptionAmount,
+     discountEnabled: true
   };
 
   setItems([...items, newItem]);
@@ -144,9 +150,14 @@ const updateItem = (
 
       let discountAmount = 0;
 
-      if (updated.discountType === 'percentage') {
-        discountAmount = (subTotal * Number(updated.discount)) / 100;
-      } else {
+      if (updated.discountEnabled) {
+        if (updated.discountType === 'percentage') {
+          discountAmount = (subTotal * Number(updated.discount)) / 100;
+        } else {
+          discountAmount = Number(updated.discount);
+        }
+      }
+      else {
         discountAmount = Number(updated.discount);
       }
 
@@ -164,19 +175,21 @@ const updateItem = (
 
   const calculateSubTotal = () => items.reduce((sum, item) => sum + (item.qty * item.price), 0);
   const calculateItemDiscount = () =>
-  items.reduce((sum, item) => {
-    const subTotal = item.qty * item.price;
+    items.reduce((sum, item) => {
+      if (!item.discountEnabled) return sum;
 
-    let discountAmount = 0;
+      const subTotal = item.qty * item.price;
 
-    if (item.discountType === 'percentage') {
-      discountAmount = (subTotal * item.discount) / 100;
-    } else {
-      discountAmount = item.discount;
-    }
+      let discountAmount = 0;
 
-    return sum + discountAmount;
-  }, 0);
+      if (item.discountType === 'percentage') {
+        discountAmount = (subTotal * item.discount) / 100;
+      } else {
+        discountAmount = item.discount;
+      }
+
+      return sum + discountAmount;
+    }, 0);
 
 const calculateTotalDiscount = () =>
   calculateItemDiscount() + manualDiscountValue;
@@ -495,7 +508,7 @@ const calculateTotalDiscount = () =>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Dis: Type</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Discount</th>
                     <th className="px-3 py-2 text-right font-medium text-gray-700">Total</th>
-                    <th className="px-3 py-2"></th>
+                    <th className="px-3 py-2 text-right font-medium text-gray-700">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -540,44 +553,85 @@ const calculateTotalDiscount = () =>
                         </td>
 
                       <td className="px-3 py-2 text-right">
-                        <select
-                          value={item.discountType}
-                          onChange={(e) =>
-                            updateItem(item.id, 'discountType', e.target.value)
-                          }
-                          className="border border-gray-300 rounded text-xs px-1 py-1"
-                        >
+                          <select
+                            value={item.discountType}
+                            disabled={!item.discountEnabled}
+                            onChange={(e) =>
+                              updateItem(item.id, 'discountType', e.target.value)
+                            }
+                            className="border border-gray-300 rounded text-xs px-1 py-1 disabled:bg-gray-100"
+                          >
                           <option value="manual">Manual</option>
                           <option value="percentage">%</option>
                         </select>
                       </td>
 
-                        <td className="px-3 py-2 align-middle">
-                          <div className="flex items-center justify-end">
+                      <td className="px-3 py-2 align-middle">
+                        <div className="flex items-center justify-end gap-1">
                           <input
                             type="number"
                             value={item.discount}
+                            disabled={!item.discountEnabled}
                             onChange={(e) =>
-                              updateItem(item.id, 'discount', parseFloat(e.target.value) )
+                              updateItem(item.id, 'discount', parseFloat(e.target.value))
                             }
-                            className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs"
+                            className="w-16 px-2 py-1 text-right border border-gray-300 rounded text-xs disabled:bg-gray-100"
                             min="0"
                           />
-                          </div>
-                        </td>
+
+                          {!item.discountEnabled && (
+                            <span className="text-[15px] text-red-500">*</span>
+                          )}
+                        </div>
+                      </td>
 
                         <td className="px-3 py-2 text-right font-medium">
                           {item.total.toFixed(2)}
                         </td>
 
-                        <td className="px-3 py-2">
-                          <button
-                            onClick={() => removeItem(item.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
+                      <td className="px-3 py-2 text-right">
+                        <DropdownMenu
+                          isOpen={openMenuId === item.id}
+                          onOpen={() =>
+                            setOpenMenuId((prev) => (prev === item.id ? null : item.id))
+                          }
+                          onClose={() => setOpenMenuId(null)}
+                          items={[
+                            {
+                              label: "Delete",
+                              onClick: () => removeItem(item.id),
+                              danger: true,
+                            },
+                            {
+                              label: item.discountEnabled
+                                ? "Disable Discount"
+                                : "Enable Discount",
+                              onClick: () => {
+                                setItems((prev) =>
+                                  prev.map((i) =>
+                                    i.id === item.id
+                                      ? {
+                                          ...i,
+                                          discountEnabled: !i.discountEnabled,
+                                          discount: !i.discountEnabled ? i.discount : 0,
+                                        }
+                                      : i
+                                  )
+                                );
+                              },
+                            },
+                          ]}
+                        >
+                          {({ onClick }) => (
+                            <button
+                              onClick={onClick}
+                              className="p-1 rounded hover:bg-gray-100"
+                            >
+                              ⋮
+                            </button>
+                          )}
+                        </DropdownMenu>
+                      </td>
                       </tr>
                     );
                   })}
@@ -759,15 +813,16 @@ onSelect={(products) => {
     price: product.sellingPrice,
     discount: 0,
     discountType: 'manual',
+     discountEnabled: true,
     total: product.sellingPrice,
   }));
 
-  setItems((prev) => {
+setItems((prev) => {
   const existingCodes = new Set(prev.map((i) => i.itemCode));
 
-  const newItems = products
+  const newItems: InvoiceItem[] = products
     .filter((p) => !existingCodes.has(p.code))
-    .map((product) => ({
+    .map((product): InvoiceItem => ({
       id: Date.now().toString() + product.id,
       itemName: product.name,
       itemCode: product.code,
@@ -777,6 +832,7 @@ onSelect={(products) => {
       discount: 0,
       discountType: 'manual',
       total: product.sellingPrice,
+      discountEnabled: true,
     }));
 
   return [...prev, ...newItems];
