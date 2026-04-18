@@ -33,6 +33,7 @@ export function ItemsForNewInvoice({
   const [filterStatus, setFilterStatus] = useState("all");
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [qtyError, setQtyError] = useState("");
   const [inputQty, setInputQty] = useState<number>(1);
   // 1. Add these two state variables alongside your existing ones:
   const [currentPage, setCurrentPage] = useState(1);
@@ -110,6 +111,16 @@ const paginatedProducts = filteredProducts.slice(
 
 const handleAddItemWithQty = () => {
   if (!selectedProduct || inputQty <= 0) return;
+
+  if (
+    selectedProduct.qty !== undefined &&
+    inputQty > selectedProduct.qty
+  ) {
+    setQtyError("You have selected more than existing qty!");
+    return;
+  }
+
+  setQtyError("");
 
   onSelect([
     {
@@ -399,13 +410,23 @@ const handleAddItemWithQty = () => {
         type="number"
         value={inputQty}
         min={1}
-        onChange={(e) => setInputQty(parseInt(e.target.value) || 1)}
+        onChange={(e) => {
+          const value = parseInt(e.target.value) || 1;
+          setInputQty(value);
+          setQtyError("");
+        }}
         className="w-full px-3 py-2 border rounded text-sm mb-4"
       />
 
+      {qtyError && (
+        <div className="text-red-600 text-xs mb-2">
+          {qtyError}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <button
-          onClick={() => setShowQtyModal(false)}
+          onClick={() => {setShowQtyModal(false); setQtyError("");}}
           className="flex-1 border text-gray-700 py-2 rounded text-sm"
         >
           Cancel

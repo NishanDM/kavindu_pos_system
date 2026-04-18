@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Plus, Trash2, Search, X } from 'lucide-react';
 import { ItemsForNewInvoice } from './ItemsForNewInvoice';
 import { DropdownMenu } from "../common_use_components/DropdownMenu";
+import { toast } from "react-toastify";
 
 interface InvoiceItem {
   id: string;
@@ -551,26 +552,51 @@ const addOverheadItem = () => {
                       <ItemsForNewInvoice
                         show={showItemSearch}
                         onClose={() => setShowItemSearch(false)}
-                        onSelect={(products) => {
-                          setItems((prev) => {
-                            const existingCodes = new Set(prev.map((i) => i.itemCode));
-                            const newItems: InvoiceItem[] = products
-                              .filter((p) => !existingCodes.has(p.code))
-                              .map((product): InvoiceItem => ({
-                                id: Date.now().toString() + product.id,
-                                itemName: product.name,
-                                itemCode: product.code,
-                                qty: product.qty || 1,
-                                cost: product.costPrice,
-                                price: product.sellingPrice,
-                                discount: 0,
-                                discountType: 'percentage',
-                                total: product.sellingPrice * (product.qty || 1),
-                                discountEnabled: true,
-                              }));
-                            return [...prev, ...newItems];
+                      onSelect={(products) => {
+                        setItems((prev) => {
+                          const existingCodes = new Set(prev.map((i) => i.itemCode));
+                          const updatedItems = [...prev];
+
+                          products.forEach((product) => {
+                            const isDuplicate = existingCodes.has(product.code);
+
+                            // 🚫 Duplicate check
+                            if (isDuplicate) {
+                              toast.warning(`Item "${product.name}" is already added`);
+                              return;
+                            }
+
+                            // 🚫 Stock check
+                            const requestedQty = product.qty || 1;
+                            const availableQty = product.qty ?? 0;
+
+                            if (requestedQty > availableQty) {
+                              toast.error(
+                                `Not enough stock for "${product.name}". Available: ${availableQty}`
+                              );
+                              return;
+                            }
+
+                            // ✅ Add item
+                            updatedItems.push({
+                              id: Date.now().toString() + product.id,
+                              itemName: product.name,
+                              itemCode: product.code,
+                              qty: requestedQty,
+                              cost: product.costPrice,
+                              price: product.sellingPrice,
+                              discount: 0,
+                              discountType: "percentage",
+                              total: product.sellingPrice * requestedQty,
+                              discountEnabled: true,
+                            });
+
+                            toast.success(`"${product.name}" added to invoice`);
                           });
-                        }}
+
+                          return updatedItems;
+                        });
+                      }}
                       />
                     )}
         </div>

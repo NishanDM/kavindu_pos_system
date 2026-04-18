@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Toaster } from "react-hot-toast";
 import { Login } from './components/Login';
 import { Header } from './components/Header';
@@ -314,6 +316,7 @@ export default function App() {
         onClose={() => setShowNotifications(false)}
       />
     </div>
+    <ToastContainer />
 </>
   );
 }
