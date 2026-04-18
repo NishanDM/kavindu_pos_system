@@ -545,7 +545,7 @@ const addOverheadItem = () => {
               Clear Items
             </button>
         </div>
-        <div>
+        <div className='mb-10'>
                         {/* Inline product search table */}
                     {showItemSearch && (
                       <ItemsForNewInvoice
@@ -577,7 +577,9 @@ const addOverheadItem = () => {
         </div>
 
           </div>
-      <div className='my-3'>
+
+          <div className='mt-14'>
+      <div className='flex my-3'>
         <h2>Billing Items Table</h2>
       </div>
           {items.length > 0 && (
@@ -730,6 +732,8 @@ const addOverheadItem = () => {
             </div>
           )}
         </div>
+          </div>
+
 
         {/* Totals */}
         {items.length > 0 && (

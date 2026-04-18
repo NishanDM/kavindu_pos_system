@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, Filter, AlertCircle } from "lucide-react";
 
 interface Product {
@@ -34,6 +34,9 @@ export function ItemsForNewInvoice({
   const [showQtyModal, setShowQtyModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [inputQty, setInputQty] = useState<number>(1);
+  // 1. Add these two state variables alongside your existing ones:
+  const [currentPage, setCurrentPage] = useState(1);
+  const ROWS_PER_PAGE = 13;
   
   const products: Product[] = [
   { id: "1", name: "Laptop Pro", code: "LP100", brand: "TechCorp", partNumber: "TC-LP-001", supplierItemCode: "SUP-LP-001", category: "Electronics", qty: 25, reorderLevel: 10, costPrice: 1200, sellingPrice: 1440, status: "active" },
@@ -57,31 +60,49 @@ export function ItemsForNewInvoice({
   { id: "19", name: "Desk Chair Mat", code: "CM1900", brand: "ComfortSeat", partNumber: "CS-CM-019", supplierItemCode: "SUP-CM-019", category: "Furniture", qty: 10, reorderLevel: 5, costPrice: 40, sellingPrice: 48, status: "active" },
   { id: "20", name: "External Hard Drive", code: "HD2000", brand: "StoragePro", partNumber: "SP-HD-020", supplierItemCode: "SUP-HD-020", category: "Electronics", qty: 12, reorderLevel: 10, costPrice: 150, sellingPrice: 180, status: "inactive" },
 ];
+
+
+
+
   // categories (can be dynamic)
   const categories = useMemo(() => {
     const unique = new Set(products.map((p) => p.category).filter(Boolean));
     return Array.from(unique) as string[];
   }, [products]);
+  
 
   // filtering
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.supplierItemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.brand || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.partNumber || "").toLowerCase().includes(searchQuery.toLowerCase());
+// Remove setCurrentPage(1) from inside the useMemo
+const filteredProducts = useMemo(() => {
+  return products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.supplierItemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.brand || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.partNumber || "").toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory =
-        filterCategory === "all" || product.category === filterCategory;
+    const matchesCategory =
+      filterCategory === "all" || product.category === filterCategory;
 
-      const matchesStatus =
-        filterStatus === "all" || product.status === filterStatus;
+    const matchesStatus =
+      filterStatus === "all" || product.status === filterStatus;
 
-      return matchesSearch && matchesCategory && matchesStatus;
-    });
-  }, [products, searchQuery, filterCategory, filterStatus]);
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+}, [products, searchQuery, filterCategory, filterStatus]);
+
+// Add this useEffect right after the useMemo
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchQuery, filterCategory, filterStatus]);
+
+
+  const totalPages = Math.ceil(filteredProducts.length / ROWS_PER_PAGE);
+const paginatedProducts = filteredProducts.slice(
+  (currentPage - 1) * ROWS_PER_PAGE,
+  currentPage * ROWS_PER_PAGE
+);
 
   const lowStockItems = products.filter(
     (p) => p.qty !== undefined && p.reorderLevel !== undefined && p.qty <= p.reorderLevel
@@ -111,7 +132,7 @@ const handleAddItemWithQty = () => {
     <div className="mt-4 rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[500px]">
 
       {/* Modal */}
-      <div className="bg-white w-[1120px] max-w-[95vw] max-h-[80vh]  rounded-lg shadow-xl border border-gray-200 flex flex-col">
+      <div className="bg-white w-[1120px] max-w-[95vw] max-h-[90vh]  rounded-lg shadow-xl border border-gray-200 flex flex-col">
 
         {/* Header */}
         <div className="p-2 border-b border-gray-200 flex justify-between items-center">
@@ -230,7 +251,7 @@ const handleAddItemWithQty = () => {
                 </tr>
               )}
 
-              {filteredProducts.map((product) => {
+              {paginatedProducts.map((product) => {
                 const isLow =
                   product.qty !== undefined &&
                   product.reorderLevel !== undefined &&
@@ -305,8 +326,55 @@ const handleAddItemWithQty = () => {
                 );
               })}
             </tbody>
-
           </table>
+
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+  <span className="text-xs text-gray-500">
+    Showing{" "}
+    <span className="font-medium text-gray-700">
+      {filteredProducts.length === 0 ? 0 : (currentPage - 1) * ROWS_PER_PAGE + 1}
+    </span>
+    {" – "}
+    <span className="font-medium text-gray-700">
+      {Math.min(currentPage * ROWS_PER_PAGE, filteredProducts.length)}
+    </span>
+    {" of "}
+    <span className="font-medium text-gray-700">{filteredProducts.length}</span>
+    {" items"}
+  </span>
+
+  <div className="flex items-center gap-1">
+    <button
+      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+      disabled={currentPage === 1}
+      className="px-3 py-1 text-xs border border-gray-300 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+    >
+      ← Prev
+    </button>
+
+    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+      <button
+        key={page}
+        onClick={() => setCurrentPage(page)}
+        className={`px-3 py-1 text-xs border rounded ${
+          page === currentPage
+            ? "bg-blue-50 border-blue-400 text-blue-700 font-medium"
+            : "border-gray-300 hover:bg-gray-50"
+        }`}
+      >
+        {page}
+      </button>
+    ))}
+
+    <button
+      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+      disabled={currentPage === totalPages || totalPages === 0}
+      className="px-3 py-1 text-xs border border-gray-300 rounded disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+    >
+      Next →
+    </button>
+  </div>
+</div>
 
         </div>
 
