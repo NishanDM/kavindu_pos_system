@@ -9,6 +9,7 @@ import {
   FileCheck,
   ChevronDown,
   ChevronRight,
+  BarChart,
 } from 'lucide-react';
 
 interface MenuItem {
@@ -96,6 +97,22 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <FileCheck className="w-4 h-4" />,
       children: [
         { id: 'quotation-all', label: 'View All' },
+      ],
+    },
+
+
+        {
+      id: 'reports',
+      label: 'Reports',
+      icon: <BarChart className="w-4 h-4" />,
+      children: [
+        { id: 'reports-invoice', label: 'Invoice' },
+        { id: 'reports-customers', label: 'Customer' },
+        { id: 'reports-stock', label: 'Stock' },
+        { id: 'reports-supplier', label: 'Suplier' },
+        { id: 'reports-accounts', label: 'Account' },
+        { id: 'reports-po-grn', label: 'PO & GRN' },
+        { id: 'reports-quotation', label: 'Quotation' },
       ],
     },
   ];

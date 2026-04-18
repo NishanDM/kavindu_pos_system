@@ -270,6 +270,16 @@ export default function App() {
       case 'quotation-all':   return <QuotationManagement />;
       
 
+       // Reports sections
+      case 'reports':
+      case 'reports-invoice':  return <InvoiceReports />;
+      case 'reports-customers':     return <CustomerReports />;
+      case 'reports-stock':     return <StockReports />;
+      case 'reports-supplier':     return <SupplierReports />;
+      case 'reports-accounts':     return <AccountsReprts />;
+      case 'reports-po-grn':     return <GrnReports />;
+      case 'reports-quotation':     return <QuotationReports />;
+
       default:  return <AccountsDashboard />;
       
     }
