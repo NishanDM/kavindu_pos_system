@@ -23,7 +23,7 @@ interface SelectItemForGRNProps {
   products?: Product[];
 }
 
-export function ItemsForNewInvoice({
+export function SelectItemsForNewInvoice({
   show,
   onClose,
   onSelect,
@@ -31,9 +31,7 @@ export function ItemsForNewInvoice({
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [showQtyModal, setShowQtyModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [inputQty, setInputQty] = useState<number>(1);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   
   const products: Product[] = [
   { id: "1", name: "Laptop Pro", code: "LP100", brand: "TechCorp", partNumber: "TC-LP-001", supplierItemCode: "SUP-LP-001", category: "Electronics", qty: 25, reorderLevel: 10, costPrice: 1200, sellingPrice: 1440, status: "active" },
@@ -87,39 +85,38 @@ export function ItemsForNewInvoice({
     (p) => p.qty !== undefined && p.reorderLevel !== undefined && p.qty <= p.reorderLevel
   );
 
-const handleAddItemWithQty = () => {
-  if (!selectedProduct || inputQty <= 0) return;
-
-  onSelect([
-    {
-      ...selectedProduct,
-      qty: inputQty,
-    },
-  ]);
-
-  setShowQtyModal(false);
-  setSelectedProduct(null);
-  setInputQty(1);
+const toggleSelect = (id: string) => {
+  setSelectedItems((prev) =>
+    prev.includes(id)
+      ? prev.filter((item) => item !== id)
+      : [...prev, id]
+  );
 };
-
 
   // **only now** can we conditionally return null
   if (!show) return null;
 
 
   return (
-    <div className="mt-4 rounded-lg border border-gray-200 shadow-sm flex flex-col max-h-[500px]">
+    <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-[200]">
 
       {/* Modal */}
-      <div className="bg-white w-[1120px] max-w-[95vw] max-h-[80vh]  rounded-lg shadow-xl border border-gray-200 flex flex-col">
+      <div className="bg-white w-[1160px] max-w-[95vw] max-h-[80vh] ml-[160px] rounded-lg shadow-xl border border-gray-200 flex flex-col">
 
         {/* Header */}
         <div className="p-2 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Select Item for Invoice
+              Select Item for GRN 
             </h2>
           </div>
+
+          <button
+            onClick={onClose}
+            className="px-3 py-1 text-xs bg-gray-100 hover:text-white hover:bg-red-500 rounded cursor-pointer"
+          >
+            X
+          </button>
         </div>
 
 
@@ -170,6 +167,20 @@ const handleAddItemWithQty = () => {
             <option value="discontinued">Discontinued</option>
           </select>
 
+        <button
+        onClick={() => {
+            const selectedProducts = products.filter((p) =>
+            selectedItems.includes(p.id)
+            );
+
+            onSelect(selectedProducts);
+            onClose();
+            setSelectedItems([]);
+        }}
+        className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+        >
+        Add Items
+        </button>
         </div>
 
         {/* Table */}
@@ -179,6 +190,22 @@ const handleAddItemWithQty = () => {
 
             <thead className="bg-gray-50 sticky top-0">
               <tr>
+                <th className="px-3 py-3 text-left font-medium text-gray-700">
+                <input
+                    type="checkbox"
+                    checked={
+                    filteredProducts.length > 0 &&
+                    selectedItems.length === filteredProducts.length
+                    }
+                    onChange={(e) => {
+                    if (e.target.checked) {
+                        setSelectedItems(filteredProducts.map((p) => p.id));
+                    } else {
+                        setSelectedItems([]);
+                    }
+                    }}
+                />
+                </th>
 
                 <th className="px-3 py-3 text-left font-medium text-gray-700">
                   Code
@@ -239,15 +266,22 @@ const handleAddItemWithQty = () => {
                 return (
                   <tr
                     key={product.id}
-                    onClick={() => {
-                      setSelectedProduct(product);
-                      setInputQty(1);
-                      setShowQtyModal(true);
-                    }}
+                    onClick={() => toggleSelect(product.id)}
                     className={`border-t border-gray-200 cursor-pointer hover:bg-gray-50 ${
                       isLow ? "bg-red-50" : ""
                     }`}
                   >
+
+                    <td className="px-3 py-1.5 font-medium text-blue-600">
+                        <input
+                        type="checkbox"
+                        checked={selectedItems.includes(product.id)}
+                        onChange={(e) => {
+                            e.stopPropagation(); // prevent row click
+                            toggleSelect(product.id);
+                        }}
+                        />
+                    </td>
 
                     <td className="px-3 py-1.5 font-medium text-blue-600">
                       {product.code}
@@ -314,46 +348,6 @@ const handleAddItemWithQty = () => {
         <div className="grid grid-cols-3 gap-3 p-4 border-t border-gray-200">  </div>
 
       </div>
-
-{showQtyModal && selectedProduct && (
-  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-[200]">
-    <div className="bg-white rounded-lg shadow-xl w-80 p-5">
-
-      <h3 className="text-sm font-semibold mb-3">
-        Enter Quantity
-      </h3>
-
-      <div className="mb-3 text-xs text-gray-600">
-        {selectedProduct.name} ({selectedProduct.code})
-      </div>
-
-      <input
-        type="number"
-        value={inputQty}
-        min={1}
-        onChange={(e) => setInputQty(parseInt(e.target.value) || 1)}
-        className="w-full px-3 py-2 border rounded text-sm mb-4"
-      />
-
-      <div className="flex gap-2">
-        <button
-          onClick={() => setShowQtyModal(false)}
-          className="flex-1 border text-gray-700 py-2 rounded text-sm"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleAddItemWithQty}
-          className="flex-1 bg-blue-600 text-white py-2 rounded text-sm"
-        >
-          OK
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
 
     </div>
   );

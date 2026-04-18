@@ -98,23 +98,6 @@ const [bankTransfer, setBankTransfer] = useState({
     setCustomerSearchQuery('');
   };
 
-  const addItem = (item: typeof mockItems[0]) => {
-    const newItem: InvoiceItem = {
-      id: Date.now().toString(),
-      itemName: item.name,
-      itemCode: item.code,
-      qty: 1,
-      cost: item.cost,
-      price: item.price,
-      discount: 0,
-      discountType: 'manual',
-      total: item.price,
-       discountEnabled: true,
-    };
-    setItems([...items, newItem]);
-    setShowItemSearch(false);
-    setSearchQuery('');
-  };
 
   const addDescriptionItem = () => {
   if (!descriptionText || descriptionAmount <= 0) return;
@@ -138,6 +121,12 @@ const [bankTransfer, setBankTransfer] = useState({
   setDescriptionText('');
   setDescriptionAmount(0);
   setShowDescriptionModal(false);
+};
+
+
+const handleClearItems = () => {
+  setItems([]);
+  setManualDiscountValue(0);
 };
 
 const updateItem = (
@@ -520,38 +509,77 @@ const addOverheadItem = () => {
         {/* Items Section */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
-            <label className="text-xs font-medium text-gray-700">Items</label>
-          <div className='flex gap-4 cols-2'>
-              <button
-              onClick={() => setShowItemSearch(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+          <div className='flex flex-col gap-2'>
+        <div className='flex gap-4'>
+                    <button
+                    onClick={() => setShowItemSearch(prev => !prev)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                  >
+                    {showItemSearch ? 'Hide Table' : 'Show Table'}
+                  </button>
+
+                    <div className="relative">
+                      <select
+                        onChange={(e) => {
+                          handleExtraAction(e.target.value);
+                          e.target.selectedIndex = 0;
+                        }}
+                        className="appearance-none flex items-center gap-1 px-3 py-1.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 cursor-pointer pr-8"
+                      >
+                        <option value="">More</option>
+                        <option value="manual-discount">Manual Discount</option>
+                        <option value="expenses">Add Expenses</option>
+                        <option value="overhead">Overhead</option>
+                      </select>
+
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-xs">
+                        ▼
+                      </span>
+                    </div>
+
+                      <button
+              onClick={handleClearItems}
+              disabled={items.length === 0}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              <Plus className="w-3 h-3" />
-              Add Item
+              Clear Items
             </button>
-
-            <div className="relative">
-              <select
-                onChange={(e) => {
-                  handleExtraAction(e.target.value);
-                  e.target.selectedIndex = 0;
-                }}
-                className="appearance-none flex items-center gap-1 px-3 py-1.5 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 cursor-pointer pr-8"
-              >
-                <option value="">More</option>
-                <option value="manual-discount">Manual Discount</option>
-                <option value="expenses">Add Expenses</option>
-                <option value="overhead">Overhead</option>
-              </select>
-
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-xs">
-                ▼
-              </span>
-            </div>
+        </div>
+        <div>
+                        {/* Inline product search table */}
+                    {showItemSearch && (
+                      <ItemsForNewInvoice
+                        show={showItemSearch}
+                        onClose={() => setShowItemSearch(false)}
+                        onSelect={(products) => {
+                          setItems((prev) => {
+                            const existingCodes = new Set(prev.map((i) => i.itemCode));
+                            const newItems: InvoiceItem[] = products
+                              .filter((p) => !existingCodes.has(p.code))
+                              .map((product): InvoiceItem => ({
+                                id: Date.now().toString() + product.id,
+                                itemName: product.name,
+                                itemCode: product.code,
+                                qty: product.qty || 1,
+                                cost: product.costPrice,
+                                price: product.sellingPrice,
+                                discount: 0,
+                                discountType: 'percentage',
+                                total: product.sellingPrice * (product.qty || 1),
+                                discountEnabled: true,
+                              }));
+                            return [...prev, ...newItems];
+                          });
+                        }}
+                      />
+                    )}
+        </div>
         </div>
 
           </div>
-
+      <div className='my-3'>
+        <h2>Billing Items Table</h2>
+      </div>
           {items.length > 0 && (
             <div className="border border-gray-200 rounded overflow-hidden">
               <table className="w-full text-xs">
@@ -866,49 +894,6 @@ const addOverheadItem = () => {
   </div>
 )}
 
-      {/* Item Search Modal */}
-{showItemSearch && (
-  <ItemsForNewInvoice
-    show={showItemSearch}
-    onClose={() => setShowItemSearch(false)}
-onSelect={(products) => {
-  const newItems: InvoiceItem[] = products.map((product) => ({
-    id: Date.now().toString() + product.id,
-    itemName: product.name,
-    itemCode: product.code,
-    qty: 1,
-    cost: product.costPrice,
-    price: product.sellingPrice,
-    discount: 0,
-    discountType: 'manual',
-     discountEnabled: true,
-    total: product.sellingPrice,
-  }));
-
-setItems((prev) => {
-  const existingCodes = new Set(prev.map((i) => i.itemCode));
-
-  const newItems: InvoiceItem[] = products
-    .filter((p) => !existingCodes.has(p.code))
-    .map((product): InvoiceItem => ({
-      id: Date.now().toString() + product.id,
-      itemName: product.name,
-      itemCode: product.code,
-      qty: 1,
-      cost: product.costPrice,
-      price: product.sellingPrice,
-      discount: 0,
-      discountType: 'manual',
-      total: product.sellingPrice,
-      discountEnabled: true,
-    }));
-
-  return [...prev, ...newItems];
-});
-  setShowItemSearch(false);
-}}
-  />
-)}
 
 {showManualDiscountModal && (
 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[130]">

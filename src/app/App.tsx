@@ -208,7 +208,6 @@ export default function App() {
             onDelete={handleDeleteInvoice}
           />
         );
-      case 'invoice-reports': return <InvoiceReports />
 
       // Stock sections
       case 'stock-items':
@@ -221,7 +220,6 @@ export default function App() {
           />
         );
       case 'stock-add':   return <AddItem onSave={handleSaveItem} />;
-      case 'stock-reports': return <StockReports/>;
       case 'stock-categories':
         return (
           <div className="p-6">
@@ -245,7 +243,6 @@ export default function App() {
       case 'customers-outstanding': return < CustomerOutstandings/>
       case 'customers-credit-note':  return < CustomerCreditNotes/>
       case 'customers-settlement':  return < CustomerSettlements/>
-      case 'customers-reports':  return < CustomerReports/>
 
   
 
@@ -254,13 +251,11 @@ export default function App() {
       case 'suppliers-all':  return <SupplierManagement />;
       case 'suppliers-settlements': return <SupplierSettlements/>
       case 'suppliers-outstandings':  return <SupplierOutstandings />;
-      case 'suppliers-reports': return <SupplierReports/> ;
       
 
       // Accounts sections
       case 'accounts-dashboard':  return <AccountsDashboard />;
       case 'accounts-expenses':     return <ExpenseManagement />;
-      case 'accounts-reports':  return <AccountsReprts/>
     
 
       // PO & GRN sections
@@ -268,13 +263,11 @@ export default function App() {
       case 'po-all':   return <PurchaseOrderManagement />;
       case 'grn-settlement':   return <GRNSettlement/>
       case 'grn-all':   return <GRNManagement />;
-      case 'grn-reports': return <GrnReports/> ;
       
 
       // Quotation sections
       case 'quotation-new':
       case 'quotation-all':   return <QuotationManagement />;
-      case 'quotation-reports':  return <QuotationReports />;
       
 
       default:  return <AccountsDashboard />;

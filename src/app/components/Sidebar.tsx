@@ -37,7 +37,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       children: [
         { id: 'invoice-new', label: 'New Invoice' },
         { id: 'invoice-all', label: 'View All' },
-        { id: 'invoice-reports', label: 'Reports' },
       ],
     },
     {
@@ -50,7 +49,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'customers-outstanding', label: 'Outstanding' },
         { id: 'customers-credit-note', label: 'Credit Note' },
         { id: 'customers-settlement', label: 'Settlement' },
-        { id: 'customers-reports', label: 'Reports' },
       ],
     },
     {
@@ -61,7 +59,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'stock-items', label: 'Items' },
         { id: 'stock-add', label: 'Add New' },
         { id: 'stock-categories', label: 'Categories' },
-        { id: 'stock-reports', label: 'Reports' },
       ],
     },
     {
@@ -72,7 +69,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'suppliers-all', label: 'View All' },
         { id: 'suppliers-settlements', label: 'Settlemets' },
         { id: 'suppliers-outstandings', label: 'Outstandings' },
-        { id: 'suppliers-reports', label: 'Reports' },
       ],
     },
     {
@@ -82,7 +78,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       children: [
         { id: 'accounts-dashboard', label: 'Dashboard' },
         { id: 'accounts-expenses', label: 'Expenses' },
-        { id: 'accounts-reports', label: 'Reports' },
       ],
     },
     {
@@ -93,7 +88,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         { id: 'po-all', label: 'All PO' },
         { id: 'grn-all', label: 'All GRN' },
         { id: 'grn-settlement', label: 'Settlement' },
-        { id: 'grn-reports', label: 'Reports' },
       ],
     },
     {
@@ -102,7 +96,6 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       icon: <FileCheck className="w-4 h-4" />,
       children: [
         { id: 'quotation-all', label: 'View All' },
-        { id: 'quotation-reports', label: 'Reports' },
       ],
     },
   ];
